@@ -14,7 +14,7 @@ func NewObject(x, y, w, h float64, tag string) *resolv.Object {
 	x *= SpaceSizeRatio
 	y *= SpaceSizeRatio
 	return resolv.NewObject(
-		x, y, w, h, tag,
+		x-w/2, y-h/2, w, h, tag,
 	)
 }
 
@@ -27,7 +27,7 @@ func NewLeftWall() *resolv.Object {
 
 func NewRightWall() *resolv.Object {
 	return resolv.NewObject(
-		SpaceSizeRatio-1, 0,
+		SpaceSizeRatio-1.0, 0,
 		1.0, SpaceSizeRatio, "wall",
 	)
 }

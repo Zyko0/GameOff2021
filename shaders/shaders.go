@@ -92,10 +92,9 @@ func sdSphere(p vec3, r float, offset vec3, index float) vec4 {
 }
 
 func sdRoundBox(p, b, offset vec3, index float) vec4 {
-	const r = 0.05
+	const r = 0.075
 
-	p = translate(p, offset)
-	q := abs(p) - b
+	q := abs(p - offset) - b
   	d := length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0) - r
 
 	return vec4(d, colorize(p, -d, index))
@@ -151,7 +150,7 @@ func sdScene(p vec3) vec4 {
 }
 
 func rayMarch(ro, rd vec3, start, end float) vec4 {
-	const MaxSteps = 255. // TODO: Can lower this constant on-need for performance
+	const MaxSteps = 128. // TODO: Can lower this constant on-need for performance
 
 	depth := start
 	obj := vec4(0)

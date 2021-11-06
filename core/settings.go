@@ -4,7 +4,7 @@ import "github.com/Zyko0/GameOff2021/core/augments"
 
 type baseSettings struct {
 	action augments.Action
-	
+
 }
 
 type Settings struct {
@@ -18,7 +18,7 @@ func newSettings() *Settings {
 }
 
 func (s *Settings) applyAugments() {
-
+	
 }
 
 type Augment struct {

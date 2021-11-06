@@ -127,8 +127,9 @@ func sdScene(p vec3) vec4 {
 
 	roadl := 100.
 	roadh := 0.35
+	roadw := 0.5
 	roadOffset := vec3(0., 1.+roadh-0.001, -1.)
-	road := sdBox(p, vec3(1., roadh, roadl), roadOffset, RoadIndex)
+	road := sdBox(p, vec3(roadw, roadh, roadl), roadOffset, RoadIndex)
 
 	sphereOffset := vec3(0., 1.-0.001, 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)
@@ -142,7 +143,7 @@ func sdScene(p vec3) vec4 {
 		bs := BlockSizes[i]
 		blockOffset := vec3(0., 1.-0.001, 0.)
 		blockOffset = translate(blockOffset, BlockPositions[i])
-		block := sdRoundBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex)
+		block := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex) // TODO: sdRoundBox
 		scene = minWithColor(scene, block)
 	}
 
@@ -212,7 +213,7 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	bgColor := vec3(0.1, 0.1, 0.1)
 	uv := position.xy / ScreenSize - 0.5
 
-  	ro := vec3(0., -0.5, 1.) // camera position
+  	ro := vec3(0., 0., 0.5) // camera position
 	rd := normalize(vec3(uv, -1.)) // ray direction
 
 	depthclr := rayMarch(ro, rd, 0., 100.)

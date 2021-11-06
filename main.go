@@ -55,6 +55,7 @@ func (g *Game) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		// Reset to a new level for now
 		g.level = core.NewLevel()
+		rand.Seed(time.Now().UnixNano())
 	}
 	// Pause
 	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
@@ -148,7 +149,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	*/
 
-	ebiten.SetMaxTPS(60)
+	ebiten.SetMaxTPS(logic.TPS)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	ebiten.SetFullscreen(true)
 

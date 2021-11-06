@@ -41,8 +41,9 @@ func NewDepthWall() *resolv.Object {
 
 func NewSpace(width, height float64) *resolv.Space {
 	return resolv.NewSpace(
-		int(width*SpaceSizeRatio),
-		int(height*SpaceSizeRatio),
+		// +2 to let space for walls
+		int(width*(SpaceSizeRatio+2)),
+		int(height*(SpaceSizeRatio+2)),
 		spaceCellSize,
 		spaceCellSize,
 	)

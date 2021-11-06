@@ -13,7 +13,7 @@ const (
 	BlockWidth0 = 0.2
 	BlockWidth1 = 0.4
 
-	BlockHeight0 = 0.4
+	BlockHeight0 = 0.2
 	BlockHeight1 = 0.8
 
 	BlockPosY0 = 0.
@@ -28,23 +28,23 @@ type Block struct {
 	speed float64
 }
 
-func newBlock(speed float64) *Block {
+func newBlock(x, y, width, height, speed float64) *Block {
 	return &Block{
-		x: Width / 2.,
-		y: BlockHeight0,
+		x: x,
+		y: height,
 		z: DefaultSpawnDepth,
 		hCollider: internal.NewObject(
-			Width/2.,
-			0.,
-			BlockWidth0,
-			BlockHeight0,
+			x,
+			y,
+			width,
+			height,
 			"block",
 		),
 		depthCollider: internal.NewObject(
 			DefaultSpawnDepth,
-			0.,
-			BlockWidth0,
-			BlockHeight0,
+			y,
+			width,
+			height,
 			"block",
 		),
 

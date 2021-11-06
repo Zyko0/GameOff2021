@@ -1,14 +1,16 @@
 package core
 
 import (
+	"math/rand"
+
 	"github.com/Zyko0/GameOff2021/core/internal"
 	"github.com/solarlune/resolv"
 )
 
 const (
-	Width  = 1.
-	Height = 1.
-	Depth  = 4.
+	RoadWidth  = 1.
+	RoadHeight = 1.
+	RoadDepth  = 4.
 
 	DefaultSpeed = 1.
 	InvulnTime   = 30
@@ -29,9 +31,10 @@ type Level struct {
 	rightWall *resolv.Object
 	depthWall *resolv.Object
 
-	Speed  float64
-	Player *Player
-	Blocks []*Block
+	Speed    float64
+	Player   *Player
+	Blocks   []*Block
+	Settings *Settings
 }
 
 func NewLevel() *Level {
@@ -43,16 +46,17 @@ func NewLevel() *Level {
 		playerHP:   4,
 		score:      0,
 
-		hSpace:     internal.NewSpace(Width, Height),
-		depthSpace: internal.NewSpace(Depth, Height),
+		hSpace:     internal.NewSpace(RoadWidth, RoadHeight),
+		depthSpace: internal.NewSpace(RoadDepth, RoadHeight),
 
 		leftWall:  internal.NewLeftWall(),
 		rightWall: internal.NewRightWall(),
 		depthWall: internal.NewDepthWall(),
 
-		Speed:  DefaultSpeed,
-		Player: NewPlayer(),
-		Blocks: []*Block{},
+		Speed:    DefaultSpeed,
+		Player:   NewPlayer(),
+		Blocks:   []*Block{},
+		Settings: newSettings(),
 	}
 	level.hSpace.Add(
 		level.Player.hCollider,
@@ -67,24 +71,47 @@ func NewLevel() *Level {
 	return level
 }
 
+func spawnBlocks(speed float64, maxSpawn int) []*Block {
+	blockCount := rand.Intn(maxSpawn) + 1
+	blocks := make([]*Block, blockCount)
+	indices := []int{1, 2, 3, 4, 5}
+	for i := 0; i < blockCount; i++ {
+		width := BlockWidth0
+		// TODO: handle 2nd height ?
+		height := BlockHeight0
+
+		idx := rand.Intn(len(indices))
+		x := float64(indices[idx]) * width
+		indices[idx] = indices[len(indices)-1]
+		indices = indices[:len(indices)-1]
+
+		blocks[i] = newBlock(x, 0, width, height, speed)
+	}
+
+	return blocks
+}
+
 func (l *Level) Update() {
 	if l.Player.intentX != 0 {
 		// Check collisions with a wall
 		dx := l.Player.intentX * l.Player.SpeedX * internal.SpaceSizeRatio
-		if collision := l.Player.hCollider.Check(dx/2, 0, "wall"); collision != nil {
+		if collision := l.Player.hCollider.Check(dx, 0, "wall"); collision != nil {
 			dx = collision.ContactWithObject(collision.Objects[0]).X()
 		}
-		l.Player.hCollider.X += dx / 2
+		l.Player.hCollider.X += dx
 		l.Player.hCollider.Update()
 		// Re-divide to make sense for graphics
 		l.Player.x += (dx / internal.SpaceSizeRatio)
 	}
-	// Every 120 ticks, add a block TODO: this is tmp
-	if l.tick%120 == 0 {
-		b := newBlock(BlockBaseSpeed * l.Speed)
-		l.hSpace.Add(b.hCollider)
-		l.depthSpace.Add(b.depthCollider)
-		l.Blocks = append(l.Blocks, b)
+	// Every 240 ticks, add a block TODO: this is tmp
+	if l.tick%240 == 0 {
+		// blocks := spawnBlocks(l.Speed*0.075, l.Settings.actualSettings.maxBlocksSpawn)
+		blocks := spawnBlocks(0.075, l.Settings.actualSettings.maxBlocksSpawn)
+		for _, b := range blocks {
+			l.hSpace.Add(b.hCollider)
+			l.depthSpace.Add(b.depthCollider)
+			l.Blocks = append(l.Blocks, b)
+		}
 	}
 	// Update all blocks
 	for _, b := range l.Blocks {
@@ -94,11 +121,14 @@ func (l *Level) Update() {
 		b.depthCollider.Update()
 	}
 	// Remove any blocks that have fallen off the screen
-	for i, b := range l.Blocks {
+	for i := 0; i < len(l.Blocks); i++ {
+		b := l.Blocks[i]
 		if b.z < 0 {
 			l.hSpace.Remove(b.hCollider)
 			l.depthSpace.Remove(b.depthCollider)
-			l.Blocks = append(l.Blocks[:i], l.Blocks[i+1:]...)
+			l.Blocks[i] = l.Blocks[len(l.Blocks)-1]
+			l.Blocks = l.Blocks[:len(l.Blocks)-1]
+			i--
 		}
 	}
 	// Take hp if player collided with a block if not in invulnerability frame

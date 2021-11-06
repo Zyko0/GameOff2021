@@ -5,4 +5,6 @@ const (
 	ScreenHeight = 768
 
 	GameSquareDim = ScreenHeight
+
+	TPS = 120
 )

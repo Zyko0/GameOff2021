@@ -7,7 +7,7 @@ import (
 
 const (
 	DefaultPlayerRadius = 0.1
-	DefaultPlayerSpeed  = 0.025
+	DefaultPlayerSpeed  = 0.015
 )
 
 type Player struct {
@@ -25,14 +25,14 @@ type Player struct {
 
 func NewPlayer() *Player {
 	return &Player{
-		x:            Width / 2.,
+		x:            RoadWidth / 2.,
 		y:            DefaultPlayerRadius,
 		z:            2.5,
 		intentX:      0,
 		intentAction: false,
 		radius:       DefaultPlayerRadius,
 		hCollider: internal.NewObject(
-			Width/2.,
+			RoadWidth/2.,
 			0,
 			DefaultPlayerRadius*2.,
 			DefaultPlayerRadius*2.,

@@ -24,6 +24,7 @@ type Player struct {
 }
 
 func NewPlayer() *Player {
+	id := internal.GetNextID()
 	return &Player{
 		x:            RoadWidth / 2.,
 		y:            DefaultPlayerRadius,
@@ -32,11 +33,12 @@ func NewPlayer() *Player {
 		intentAction: false,
 		radius:       DefaultPlayerRadius,
 		hCollider: internal.NewObject(
-			RoadWidth/2.,
+			RoadWidth/2.-DefaultPlayerRadius,
 			0,
 			DefaultPlayerRadius*2.,
 			DefaultPlayerRadius*2.,
 			"player",
+			id,
 		),
 		depthCollider: internal.NewObject(
 			2.5,
@@ -44,6 +46,7 @@ func NewPlayer() *Player {
 			DefaultPlayerRadius*2.,
 			DefaultPlayerRadius*2.,
 			"player",
+			id,
 		),
 
 		SpeedX: DefaultPlayerSpeed,
@@ -56,6 +59,10 @@ func (p *Player) SetIntentX(x float64) {
 
 func (p *Player) SetIntentAction(action bool) {
 	p.intentAction = action
+}
+
+func (p *Player) GetHCollider() *resolv.Object {
+	return p.hCollider
 }
 
 func (p *Player) GetRadius() float64 {

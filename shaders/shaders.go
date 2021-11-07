@@ -127,11 +127,11 @@ func sdScene(p vec3) vec4 {
 
 	roadl := 100.
 	roadh := 0.35
-	roadw := 0.5
+	roadw := 1.0
 	roadOffset := vec3(0., 1.+roadh-0.001, -1.)
 	road := sdBox(p, vec3(roadw, roadh, roadl), roadOffset, RoadIndex)
 
-	sphereOffset := vec3(0., 1.-0.001, 0.)
+	sphereOffset := vec3(0., 1., 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)
 	spherePlayer := sdSphere(p, PlayerRadius, sphereOffset, PlayerIndex)
 	
@@ -141,7 +141,7 @@ func sdScene(p vec3) vec4 {
 			break
 		}
 		bs := BlockSizes[i]
-		blockOffset := vec3(0., 1.-0.001, 0.)
+		blockOffset := vec3(0., 1, 0.)
 		blockOffset = translate(blockOffset, BlockPositions[i])
 		block := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex) // TODO: sdRoundBox
 		scene = minWithColor(scene, block)
@@ -211,16 +211,16 @@ func softShadow(ro, rd vec3, mint, tmax float) float {
 
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	bgColor := vec3(0.1, 0.1, 0.1)
-	uv := position.xy / ScreenSize - 0.5
+	uv := (position.xy / ScreenSize) * 2. - 1.
 
-  	ro := vec3(0., 0., 0.5) // camera position
+  	ro := vec3(0., 0., -1.) // camera position
 	rd := normalize(vec3(uv, -1.)) // ray direction
 
-	depthclr := rayMarch(ro, rd, 0., 100.)
+	depthclr := rayMarch(ro, rd, 0., 50.)
 	d := depthclr.x
 	clr := depthclr.yzw
 
-	if (d > 100.0) {
+	if (d > 50.0) {
 		clr = bgColor // ray didn't hit anything
 	} else {
 		p := ro + rd * d

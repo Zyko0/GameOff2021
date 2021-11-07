@@ -27,10 +27,6 @@ type Level struct {
 	hSpace     *resolv.Space
 	depthSpace *resolv.Space
 
-	leftWall  *resolv.Object
-	rightWall *resolv.Object
-	depthWall *resolv.Object
-
 	Speed    float64
 	Player   *Player
 	Blocks   []*Block
@@ -49,24 +45,13 @@ func NewLevel() *Level {
 		hSpace:     internal.NewSpace(RoadWidth, RoadHeight),
 		depthSpace: internal.NewSpace(RoadDepth, RoadHeight),
 
-		leftWall:  internal.NewLeftWall(),
-		rightWall: internal.NewRightWall(),
-		depthWall: internal.NewDepthWall(),
-
 		Speed:    DefaultSpeed,
 		Player:   NewPlayer(),
 		Blocks:   []*Block{},
 		Settings: newSettings(),
 	}
-	level.hSpace.Add(
-		level.Player.hCollider,
-		level.leftWall,
-		level.rightWall,
-	)
-	level.depthSpace.Add(
-		level.Player.depthCollider,
-		level.depthWall,
-	)
+	level.hSpace.Add(level.Player.hCollider)
+	level.depthSpace.Add(level.Player.depthCollider)
 
 	return level
 }
@@ -74,7 +59,7 @@ func NewLevel() *Level {
 func spawnBlocks(speed float64, maxSpawn int) []*Block {
 	blockCount := rand.Intn(maxSpawn) + 1
 	blocks := make([]*Block, blockCount)
-	indices := []int{1, 2, 3, 4, 5}
+	indices := []int{0, 1, 2, 3, 4}
 	for i := 0; i < blockCount; i++ {
 		width := BlockWidth0
 		// TODO: handle 2nd height ?
@@ -92,16 +77,23 @@ func spawnBlocks(speed float64, maxSpawn int) []*Block {
 }
 
 func (l *Level) Update() {
+	// Update player on X axis
 	if l.Player.intentX != 0 {
 		// Check collisions with a wall
-		dx := l.Player.intentX * l.Player.SpeedX * internal.SpaceSizeRatio
-		if collision := l.Player.hCollider.Check(dx, 0, "wall"); collision != nil {
-			dx = collision.ContactWithObject(collision.Objects[0]).X()
+		// TODO: don't forget about circular augments
+		dx := l.Player.intentX * l.Player.SpeedX
+		nextX := l.Player.x + dx
+		if nextX-l.Player.radius < 0 {
+			l.Player.x = l.Player.radius
+			l.Player.hCollider.X = 0.
+		} else if nextX+l.Player.radius > 1 {
+			l.Player.x = 1. - l.Player.radius
+			l.Player.hCollider.X = (1. - l.Player.radius*2) * internal.SpaceSizeRatio
+		} else {
+			l.Player.x = nextX
+			l.Player.hCollider.X = (l.Player.x - l.Player.radius) * internal.SpaceSizeRatio
 		}
-		l.Player.hCollider.X += dx
 		l.Player.hCollider.Update()
-		// Re-divide to make sense for graphics
-		l.Player.x += (dx / internal.SpaceSizeRatio)
 	}
 	// Every 240 ticks, add a block TODO: this is tmp
 	if l.tick%240 == 0 {
@@ -134,10 +126,20 @@ func (l *Level) Update() {
 	// Take hp if player collided with a block if not in invulnerability frame
 	if l.invulnTime > 0 {
 		l.invulnTime--
-	} else if l.Player.depthCollider.Check(0, 0, "block") != nil {
-		if l.Player.hCollider.Check(0, 0, "block") != nil {
-			l.playerHP--
-			l.invulnTime = InvulnTime
+	} else if colDepth := l.Player.depthCollider.Check(0, 0, "block"); colDepth != nil {
+		if colHorizon := l.Player.hCollider.Check(0, 0, "block"); colHorizon != nil {
+			hit := false
+			for _, od := range colDepth.Objects {
+				for _, oh := range colHorizon.Objects {
+					if od.Data == oh.Data {
+						hit = true
+					}
+				}
+			}
+			if hit {
+				l.playerHP--
+				l.invulnTime = InvulnTime
+			}
 		}
 	}
 

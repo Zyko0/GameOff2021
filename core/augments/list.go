@@ -12,6 +12,16 @@ var (
 			Value: 0,
 		},
 	}
+	AugmentDebugLines = &Augment{
+		Name:        "Developer Mode",
+		Description: "Traces lines between different blocks, disabled in production.",
+		Stackable:   false,
+		Rarity:      RarityCommon,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
 )
 
 var (
@@ -71,6 +81,16 @@ var (
 	AugmentOneMoreBlock = &Augment{
 		Name:        "More blocks",
 		Description: "Wait, this game was designed with 3 blocks per spawn at maximum..",
+		Stackable:   false,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentTopView = &Augment{
+		Name:        "Top view",
+		Description: "The camera is now positionned on top, this is usefull for debugging purposes.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
 		Cost: Cost{

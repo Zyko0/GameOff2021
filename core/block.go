@@ -29,9 +29,10 @@ type Block struct {
 }
 
 func newBlock(x, y, width, height, speed float64) *Block {
+	id := internal.GetNextID()
 	return &Block{
-		x: x,
-		y: height,
+		x: x + width/2,
+		y: height / 2,
 		z: DefaultSpawnDepth,
 		hCollider: internal.NewObject(
 			x,
@@ -39,6 +40,7 @@ func newBlock(x, y, width, height, speed float64) *Block {
 			width,
 			height,
 			"block",
+			id,
 		),
 		depthCollider: internal.NewObject(
 			DefaultSpawnDepth,
@@ -46,10 +48,15 @@ func newBlock(x, y, width, height, speed float64) *Block {
 			width,
 			height,
 			"block",
+			id,
 		),
 
 		speed: speed,
 	}
+}
+
+func (b *Block) GetHCollider() *resolv.Object {
+	return b.hCollider
 }
 
 func (b *Block) GetX() float64 {

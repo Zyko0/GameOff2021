@@ -42,7 +42,7 @@ func newBlock(x, y, width, height, speed float64) *Block {
 			id,
 		),
 		depthCollider: internal.NewBlockObject(
-			DefaultSpawnDepth,
+			DefaultSpawnDepth-width/2,
 			y,
 			width,
 			height,
@@ -55,6 +55,10 @@ func newBlock(x, y, width, height, speed float64) *Block {
 
 func (b *Block) GetHCollider() *resolv.Object {
 	return b.hCollider
+}
+
+func (b *Block) GetDCollider() *resolv.Object {
+	return b.depthCollider
 }
 
 func (b *Block) GetX() float64 {

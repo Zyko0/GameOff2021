@@ -13,6 +13,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/solarlune/resolv"
 )
 
 var (
@@ -26,6 +27,8 @@ func init() {
 }
 
 type Game struct {
+	paused bool
+
 	level *core.Level
 
 	buffer *ebiten.Image
@@ -42,6 +45,13 @@ func New() *Game {
 }
 
 func (g *Game) Update() error {
+	// Pause
+	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
+		g.paused = !g.paused
+	}
+	if g.paused {
+		return nil
+	}
 	// Reset cache
 	g.cache.Reset()
 	// Reset player's moving intents
@@ -56,10 +66,6 @@ func (g *Game) Update() error {
 		// Reset to a new level for now
 		g.level = core.NewLevel()
 		rand.Seed(time.Now().UnixNano())
-	}
-	// Pause
-	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
-		g.level.TogglePause()
 	}
 	// Jump
 	// TODO:
@@ -119,6 +125,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	})
 	// Debug
 	var dbg string
+	if len(g.level.Blocks) > 0 {
+		dbg = fmt.Sprintf("PX %0.2f - PW %0.2f - BlockX: %0.2f - BlockW: %0.2f\n",
+			g.level.Player.GetHCollider().Shape.(*resolv.Circle).X,
+			g.level.Player.GetHCollider().Shape.(*resolv.Circle).Radius,
+			g.level.Blocks[0].GetHCollider().X,
+			g.level.Blocks[0].GetHCollider().W,
+		)
+	}
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("TPS %.2f - FPS %.2f - BlockCount %d - Score %d - Speed %.2f - HP %d - %s",
 			ebiten.CurrentTPS(),

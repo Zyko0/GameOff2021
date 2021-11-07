@@ -17,8 +17,7 @@ const (
 )
 
 type Level struct {
-	tick   uint64
-	paused bool
+	tick uint64
 
 	invulnTime int
 	playerHP   int
@@ -35,8 +34,7 @@ type Level struct {
 
 func NewLevel() *Level {
 	level := &Level{
-		tick:   0,
-		paused: false,
+		tick: 0,
 
 		invulnTime: 0,
 		playerHP:   4,
@@ -79,23 +77,19 @@ func spawnBlocks(speed float64, maxSpawn int) []*Block {
 func (l *Level) Update() {
 	// Update player on X axis
 	if l.Player.intentX != 0 {
-		// Check collisions with a wall
 		// TODO: don't forget about circular augments
 		dx := l.Player.intentX * l.Player.SpeedX
-		nextX := l.Player.x + dx
-		if nextX-l.Player.radius < 0 {
-			l.Player.x = l.Player.radius
-			l.Player.hCollider.X = 0.
-		} else if nextX+l.Player.radius > 1 {
-			l.Player.x = 1. - l.Player.radius
-			l.Player.hCollider.X = (1. - l.Player.radius*2) * internal.SpaceSizeRatio
-		} else {
-			l.Player.x = nextX
-			l.Player.hCollider.X = (l.Player.x - l.Player.radius) * internal.SpaceSizeRatio
+		// Check collisions with a wall
+		if diff := l.Player.x + dx - l.Player.radius; diff < 0 {
+			dx -= diff
+		} else if diff := l.Player.x + dx + l.Player.radius; diff > 1 {
+			dx -= (diff - 1)
 		}
+		l.Player.x += dx
+		l.Player.hCollider.X += (dx * internal.SpaceSizeRatio)
 		l.Player.hCollider.Update()
 	}
-	// Every 240 ticks, add a block TODO: this is tmp
+	// Every 240 ticks, spawn some TODO: this is tmp
 	if l.tick%240 == 0 {
 		blocks := spawnBlocks(l.Speed*0.075, l.Settings.actualSettings.maxBlocksSpawn)
 		for _, b := range blocks {
@@ -104,11 +98,39 @@ func (l *Level) Update() {
 			l.Blocks = append(l.Blocks, b)
 		}
 	}
+	// If in an invulnerability frame, decrement it
+	if l.invulnTime > 0 {
+		l.invulnTime--
+	}
 	// Update all blocks
 	for _, b := range l.Blocks {
-		b.z -= b.speed
-		b.depthCollider.X -= b.speed * internal.SpaceSizeRatio
+		dw := -b.speed * internal.SpaceSizeRatio
+		// If there's a depth hit and not in an invulnerability frame, check for damage loss
+		if l.invulnTime <= 0 {
+			// Check z intersection
+			if depthHit := b.depthCollider.Shape.Intersection(dw, 0, l.Player.depthCollider.Shape); depthHit != nil {
+				// Check x intersection with the same object
+				for _, oh := range l.hSpace.Objects() {
+					if oh.Data != b.depthCollider.Data {
+						continue
+					}
+					if oh.Shape.Intersection(0, 0, l.Player.hCollider.Shape) != nil {
+						l.playerHP--
+						l.invulnTime = InvulnTime
+						// If player is dead, let's show where the block has hit
+						// TODO: not sure it's nice
+						/*
+							if l.playerHP <= l.Settings.actualSettings.hpToGameOver {
+								dw = depthHit.MTV.X()
+							}
+						*/
+					}
+				}
+			}
+		}
+		b.z += (dw / internal.SpaceSizeRatio)
 		// Depth space update
+		b.depthCollider.X += dw
 		b.depthCollider.Update()
 	}
 	// Remove any blocks that have fallen off the screen
@@ -120,25 +142,6 @@ func (l *Level) Update() {
 			l.Blocks[i] = l.Blocks[len(l.Blocks)-1]
 			l.Blocks = l.Blocks[:len(l.Blocks)-1]
 			i--
-		}
-	}
-	// Take hp if player collided with a block if not in invulnerability frame
-	if l.invulnTime > 0 {
-		l.invulnTime--
-	} else if colDepth := l.Player.depthCollider.Check(0, 0, "block"); colDepth != nil {
-		if colHorizon := l.Player.hCollider.Check(0, 0, "block"); colHorizon != nil {
-			hit := false
-			for _, od := range colDepth.Objects {
-				for _, oh := range colHorizon.Objects {
-					if od.Data == oh.Data {
-						hit = true
-					}
-				}
-			}
-			if hit {
-				l.playerHP--
-				l.invulnTime = InvulnTime
-			}
 		}
 	}
 
@@ -161,8 +164,4 @@ func (l *Level) GetSpeed() float64 {
 
 func (l *Level) GetScore() uint64 {
 	return l.score
-}
-
-func (l *Level) TogglePause() {
-	l.paused = !l.paused
 }

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	DefaultPlayerRadius = 0.085
+	DefaultPlayerRadius = 0.0425
 	DefaultPlayerSpeed  = 0.01
 )
 
@@ -37,7 +37,7 @@ func NewPlayer() *Player {
 			DefaultPlayerRadius,
 		),
 		depthCollider: internal.NewPlayerObject(
-			2.5+DefaultPlayerRadius,
+			2.5,
 			0,
 			DefaultPlayerRadius,
 		),
@@ -56,6 +56,10 @@ func (p *Player) SetIntentAction(action bool) {
 
 func (p *Player) GetHCollider() *resolv.Object {
 	return p.hCollider
+}
+
+func (p *Player) GetDCollider() *resolv.Object {
+	return p.depthCollider
 }
 
 func (p *Player) GetRadius() float64 {

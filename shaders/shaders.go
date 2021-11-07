@@ -64,7 +64,7 @@ func palette(t float, a, b, c, d vec4) vec3 {
 }
 
 func colorize(p vec3, t, index float) vec3 {
-	t = noise(p.xy*8)
+	t = noise(p.xy*8.)
 	
 	var pal [4]vec4
 	if index == 0. {
@@ -133,16 +133,16 @@ func sdScene(p vec3) vec4 {
 
 	sphereOffset := vec3(0., 1., 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)
-	spherePlayer := sdSphere(p, PlayerRadius, sphereOffset, PlayerIndex)
+	spherePlayer := sdSphere(p, PlayerRadius*2., sphereOffset, PlayerIndex)
 	
 	scene = minWithColor(scene, minWithColor(road, spherePlayer))
 	for i := 0.; i < MaxBlocks; i++ {
 		if i >= BlockCount {
 			break
 		}
-		bs := BlockSizes[i]
+		bs := BlockSizes[int(i)]
 		blockOffset := vec3(0., 1, 0.)
-		blockOffset = translate(blockOffset, BlockPositions[i])
+		blockOffset = translate(blockOffset, BlockPositions[int(i)])
 		block := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex) // TODO: sdRoundBox
 		scene = minWithColor(scene, block)
 	}
@@ -154,7 +154,7 @@ func rayMarch(ro, rd vec3, start, end float) vec4 {
 	const MaxSteps = 128. // TODO: Can lower this constant on-need for performance
 
 	depth := start
-	obj := vec4(0)
+	obj := vec4(0.)
 	for i := 0; i < MaxSteps; i++ {
 		p := ro + depth * rd
 		obj = sdScene(p)
@@ -187,17 +187,16 @@ func phong(lightDir, normal, rd, clr vec3) vec3 {
   
 	// specular
 	dotRV := clamp(dot(reflect(lightDir, normal), -rd), 0., 1.)
-	specular := vec3(0., 0, 0.2) * pow(dotRV, 1.0)
+	specular := vec3(0., 0., 0.2) * pow(dotRV, 1.0)
   
 	return ambient + diffuse + specular
 }
   
-
 func softShadow(ro, rd vec3, mint, tmax float) float {
 	res := 1.0
 	t := mint
   
-	for i := 0; i < 16; i++ {
+	for i := 0.; i < 16.; i++ {
 		h := sdScene(ro + rd * t).x
 		res = min(res, 8.0*h/t)
 		t += clamp(h, 0.02, 0.10)

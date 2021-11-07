@@ -28,9 +28,9 @@ func NewPlayerObject(x, y, r float64) *resolv.Object {
 	x *= SpaceSizeRatio
 	y *= SpaceSizeRatio
 	obj := resolv.NewObject(
-		x, y, w, h, "player",
+		x+w/2, y+w/2, w, h, "player",
 	)
-	obj.SetShape(resolv.NewCircle(x+r, y+r, r))
+	obj.SetShape(resolv.NewCircle(w/2, h/2, w/2))
 
 	return obj
 }

@@ -23,6 +23,7 @@ const (
 var ScreenSize vec2
 var PlayerPosition vec3
 var PlayerRadius float
+var Camera vec3
 
 var BlockCount float
 var BlockPositions [32]vec3
@@ -64,16 +65,24 @@ func palette(t float, a, b, c, d vec4) vec3 {
 }
 
 func colorize(p vec3, t, index float) vec3 {
-	t = noise(p.xy*8.)
-	
 	var pal [4]vec4
+
 	if index == 0. {
+		const scale = 16.
+
+		s := sin(PlayerPosition.x*8.)
+		c := cos(PlayerPosition.x*8.)
+		m := mat2(c, -s, s, c)
+		t = noise(p.xy*m*scale)
 		pal = Palette0
 	} else if index == 1. {
+		t = noise(p.xy*8.)
 		pal = Palette1
 	} else if index == 2. {
+		t = noise(p.xy*8.)
 		pal = Palette2
 	} else if index == 3. {
+		t = noise(p.xy*8.)
 		pal = Palette3
 	}
 	
@@ -151,7 +160,10 @@ func sdScene(p vec3) vec4 {
 }
 
 func rayMarch(ro, rd vec3, start, end float) vec4 {
-	const MaxSteps = 128. // TODO: Can lower this constant on-need for performance
+	const (
+		MaxSteps = 64. // TODO: Can lower this constant on-need for performance
+		Precision = 0.001
+	)
 
 	depth := start
 	obj := vec4(0.)
@@ -159,7 +171,7 @@ func rayMarch(ro, rd vec3, start, end float) vec4 {
 		p := ro + depth * rd
 		obj = sdScene(p)
 		depth += obj.x
-    	if obj.x < 0.001 || depth > end {
+    	if obj.x < Precision || depth > end {
 			break
 		}
 	}
@@ -193,14 +205,18 @@ func phong(lightDir, normal, rd, clr vec3) vec3 {
 }
   
 func softShadow(ro, rd vec3, mint, tmax float) float {
+	const (
+		MaxSteps = 16.
+		Precision = 0.001
+	)
 	res := 1.0
 	t := mint
   
-	for i := 0.; i < 16.; i++ {
+	for i := 0.; i < MaxSteps; i++ {
 		h := sdScene(ro + rd * t).x
 		res = min(res, 8.0*h/t)
 		t += clamp(h, 0.02, 0.10)
-		if h < 0.001 || t > tmax {
+		if h < Precision || t > tmax {
 			break
 		}
 	}
@@ -212,7 +228,7 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	bgColor := vec3(0.1, 0.1, 0.1)
 	uv := (position.xy / ScreenSize) * 2. - 1.
 
-  	ro := vec3(0., 0., -1.25) // camera position
+  	ro := Camera
 	rd := normalize(vec3(uv, -1.)) // ray direction
 
 	depthclr := rayMarch(ro, rd, 0., 50.)

@@ -2,6 +2,10 @@ package core
 
 import "github.com/Zyko0/GameOff2021/core/augments"
 
+const (
+	MaxPlayerSpeed = 0.02
+)
+
 type Action byte
 
 const (
@@ -10,42 +14,52 @@ const (
 )
 
 type baseSettings struct {
-	action         Action
-	hpToGameOver   int
-	maxBlocksSpawn int
+	Action         Action
+	HpToGameOver   int
+	MaxBlocksSpawn int
+	LinesDebug     bool
+	CameraPosition []float32
+	SpawnInterval  uint64
+	Circular       bool
+	PlayerSpeed    float64
 }
 
 func newBaseSettings() *baseSettings {
 	return &baseSettings{
-		action:         ActionNone,
-		hpToGameOver:   0,
-		maxBlocksSpawn: 3,
+		Action:         ActionNone,
+		HpToGameOver:   0,
+		MaxBlocksSpawn: 3,
+		LinesDebug:     false,
+		CameraPosition: []float32{0, 0, -1.25},
+		SpawnInterval:  360,
+		Circular:       false,
+		PlayerSpeed:    0.005,
 	}
 }
 
 type Settings struct {
-	baseSettings   *baseSettings
-	actualSettings *baseSettings
+	BaseSettings   *baseSettings
+	ActualSettings *baseSettings
 
-	augments []*augments.Augment
+	Augments []*augments.Augment
 }
 
 func newSettings() *Settings {
 	return &Settings{
-		baseSettings:   newBaseSettings(),
-		actualSettings: newBaseSettings(),
+		BaseSettings:   newBaseSettings(),
+		ActualSettings: newBaseSettings(),
 
-		augments: make([]*augments.Augment, 0),
+		Augments: make([]*augments.Augment, 0),
 	}
 }
 
 func (s *Settings) AddAugment(a *augments.Augment) {
-	s.augments = append(s.augments, a)
+	s.Augments = append(s.Augments, a)
 	s.applyAugments()
 }
 
 func (s *Settings) applyAugments() {
-	for range s.augments {
+	for range s.Augments {
 
 	}
 }

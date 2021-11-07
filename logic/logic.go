@@ -1,8 +1,8 @@
 package logic
 
 const (
-	ScreenWidth  = 1024
-	ScreenHeight = 768
+	ScreenWidth  = 768 //1024
+	ScreenHeight = 576 //768
 
 	GameSquareDim = ScreenHeight
 

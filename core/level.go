@@ -78,20 +78,26 @@ func (l *Level) Update() {
 	// Update player on X axis
 	if l.Player.intentX != 0 {
 		// TODO: don't forget about circular augments
-		dx := l.Player.intentX * l.Player.SpeedX
+		dx := l.Player.intentX * l.Settings.ActualSettings.PlayerSpeed
 		// Check collisions with a wall
 		if diff := l.Player.x + dx - l.Player.radius; diff < 0 {
 			dx -= diff
+			if l.Settings.ActualSettings.Circular {
+				dx = (1 - l.Player.radius) - l.Player.x
+			}
 		} else if diff := l.Player.x + dx + l.Player.radius; diff > 1 {
 			dx -= (diff - 1)
+			if l.Settings.ActualSettings.Circular {
+				dx = -l.Player.x + l.Player.radius
+			}
 		}
 		l.Player.x += dx
 		l.Player.hCollider.X += (dx * internal.SpaceSizeRatio)
 		l.Player.hCollider.Update()
 	}
-	// Every 240 ticks, spawn some TODO: this is tmp
-	if l.tick%240 == 0 {
-		blocks := spawnBlocks(l.Speed*0.075, l.Settings.actualSettings.maxBlocksSpawn)
+	// Every spawninterval ticks, spawn some
+	if l.tick%l.Settings.ActualSettings.SpawnInterval == 0 {
+		blocks := spawnBlocks(l.Speed*0.075, l.Settings.ActualSettings.MaxBlocksSpawn)
 		for _, b := range blocks {
 			l.hSpace.Add(b.hCollider)
 			l.depthSpace.Add(b.depthCollider)

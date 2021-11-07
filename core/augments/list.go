@@ -14,7 +14,7 @@ var (
 	}
 	AugmentDebugLines = &Augment{
 		Name:        "Developer Mode",
-		Description: "Traces lines between different blocks, disabled in production.",
+		Description: "Traces lines between different blocks, disabled in production of course.",
 		Stackable:   false,
 		Rarity:      RarityCommon,
 		Cost: Cost{
@@ -50,13 +50,23 @@ var (
 			Value: 0,
 		},
 	}
+	AugmentHeartSpawn = &Augment{
+		Name:        "Heart containers",
+		Description: "This doesn't really look like a bug, but more like an omitted feature.",
+		Stackable:   false,
+		Rarity:      RarityEpic,
+		Cost: Cost{
+			Kind:  CostKindHP,
+			Value: 1,
+		},
+	}
 )
 
 var (
 	// Legendary
 	AugmentNegativeHearts = &Augment{
 		Name:        "Negative Hearts",
-		Description: "Game is over at -3 hp, why though..",
+		Description: "Game is over at -3 hp, why though...",
 		Stackable:   false,
 		Rarity:      RarityLegendary,
 		Cost: Cost{
@@ -71,7 +81,7 @@ var (
 		Rarity:      RarityLegendary,
 		Cost: Cost{
 			Kind:  CostKindHP,
-			Value: 0,
+			Value: 1,
 		},
 	}
 )
@@ -80,7 +90,7 @@ var (
 	// Negative
 	AugmentOneMoreBlock = &Augment{
 		Name:        "More blocks",
-		Description: "Wait, this game was designed with 3 blocks per spawn at maximum..",
+		Description: "Wait, this game was designed with 3 blocks per spawn at maximum...",
 		Stackable:   false,
 		Rarity:      RarityNegative,
 		Cost: Cost{
@@ -96,6 +106,36 @@ var (
 		Cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
+		},
+	}
+	AugmentMoreSpawns = &Augment{
+		Name:        "More spawns",
+		Description: "Twice the amount of rows spawning... Who let that happen ?",
+		Stackable:   false,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentHalfwaySpawns = &Augment{
+		Name:        "Halfway spawns",
+		Description: "So blocks spawn closer now, how is the player supposed to react properly ?",
+		Stackable:   false,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentNothing = &Augment{
+		Name:        "Nothing",
+		Description: "",
+		Stackable:   true,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostKindHP,
+			Value: 1,
 		},
 	}
 )

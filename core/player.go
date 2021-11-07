@@ -7,7 +7,6 @@ import (
 
 const (
 	DefaultPlayerRadius = 0.0425
-	DefaultPlayerSpeed  = 0.01
 )
 
 type Player struct {
@@ -19,8 +18,6 @@ type Player struct {
 
 	hCollider     *resolv.Object
 	depthCollider *resolv.Object
-
-	SpeedX float64
 }
 
 func NewPlayer() *Player {
@@ -41,8 +38,6 @@ func NewPlayer() *Player {
 			0,
 			DefaultPlayerRadius,
 		),
-
-		SpeedX: DefaultPlayerSpeed,
 	}
 }
 

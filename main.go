@@ -13,7 +13,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/solarlune/resolv"
 )
 
 var (
@@ -59,6 +58,7 @@ func (g *Game) Update() error {
 	g.level.Player.SetIntentAction(false)
 	// Quit
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		// TODO: Don't forget to remove this
 		return errors.New("soft kill")
 	}
 	// Restart
@@ -108,6 +108,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			"ScreenSize":     []float32{float32(logic.GameSquareDim), float32(logic.GameSquareDim)},
 			"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
 			"PlayerRadius":   float32(g.level.Player.GetRadius()),
+			"Camera":         g.level.Settings.ActualSettings.CameraPosition,
 
 			"BlockCount":     float32(len(g.level.Blocks)),
 			"BlockPositions": g.cache.BlockPositions,
@@ -124,24 +125,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		Filter: ebiten.FilterLinear,
 	})
 	// Debug
-	var dbg string
-	if len(g.level.Blocks) > 0 {
-		dbg = fmt.Sprintf("PX %0.2f - PW %0.2f - BlockX: %0.2f - BlockW: %0.2f\n",
-			g.level.Player.GetHCollider().Shape.(*resolv.Circle).X,
-			g.level.Player.GetHCollider().Shape.(*resolv.Circle).Radius,
-			g.level.Blocks[0].GetHCollider().X,
-			g.level.Blocks[0].GetHCollider().W,
-		)
-	}
 	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("TPS %.2f - FPS %.2f - BlockCount %d - Score %d - Speed %.2f - HP %d - %s",
+		fmt.Sprintf("TPS %.2f - FPS %.2f - BlockCount %d - Score %d - Speed %.2f - HP %d",
 			ebiten.CurrentTPS(),
 			ebiten.CurrentFPS(),
 			len(g.level.Blocks),
 			g.level.GetScore(),
 			g.level.GetSpeed(),
 			g.level.GetPlayerHP(),
-			dbg,
 		),
 	)
 }

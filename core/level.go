@@ -14,6 +14,8 @@ const (
 
 	DefaultSpeed = 1.
 	InvulnTime   = 30
+
+	BlockDefaultSpeed = 0.075
 )
 
 type Level struct {
@@ -27,6 +29,7 @@ type Level struct {
 	depthSpace *resolv.Space
 
 	Speed    float64
+	Distance float64
 	Player   *Player
 	Blocks   []*Block
 	Settings *Settings
@@ -44,6 +47,7 @@ func NewLevel() *Level {
 		depthSpace: internal.NewSpace(RoadDepth, RoadHeight),
 
 		Speed:    DefaultSpeed,
+		Distance: 0,
 		Player:   NewPlayer(),
 		Blocks:   []*Block{},
 		Settings: newSettings(),
@@ -97,7 +101,7 @@ func (l *Level) Update() {
 	}
 	// Every spawninterval ticks, spawn some
 	if l.tick%l.Settings.ActualSettings.SpawnInterval == 0 {
-		blocks := spawnBlocks(l.Speed*0.075, l.Settings.ActualSettings.MaxBlocksSpawn)
+		blocks := spawnBlocks(l.Speed*BlockDefaultSpeed, l.Settings.ActualSettings.MaxBlocksSpawn)
 		for _, b := range blocks {
 			l.hSpace.Add(b.hCollider)
 			l.depthSpace.Add(b.depthCollider)
@@ -110,7 +114,7 @@ func (l *Level) Update() {
 	}
 	// Update all blocks
 	for _, b := range l.Blocks {
-		dw := -b.speed * internal.SpaceSizeRatio
+		dw := -(l.Speed * BlockDefaultSpeed) * internal.SpaceSizeRatio
 		// If there's a depth hit and not in an invulnerability frame, check for damage loss
 		if l.invulnTime <= 0 {
 			// Check z intersection
@@ -153,6 +157,7 @@ func (l *Level) Update() {
 
 	l.tick++
 	l.score++
+	l.Distance += (l.Speed * BlockDefaultSpeed)
 
 	// Every 500 score increase speed by 0.5
 	if l.score%500 == 0 {

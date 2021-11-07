@@ -1,5 +1,30 @@
 package augments
 
+type ID byte
+
+const (
+	// Common
+	IDIncreaseSpeed ID = iota
+	IDDebugLines
+	// Rare
+	IDActionJump
+	// Epic
+	IDHighSpawn
+	IDHeartSpawn
+	IDCancelLastNegative
+	// Legendary
+	IDNegativeHearts
+	IDCircular
+	// Negative
+	IDOneMoreBlocks
+	IDTallerBlocks
+	IDTopView
+	IDMoreSpawns
+	IDHalfwaySpawns
+	IDNothing
+	IDCancelLastPositive
+)
+
 var (
 	// Common
 	AugmentIncreaseSpeed = &Augment{
@@ -60,6 +85,16 @@ var (
 			Value: 1,
 		},
 	}
+	AugmentCancelLastNegative = &Augment{
+		Name:        "Bug fix",
+		Description: "Okay the last negative bug you encountered is now fixed.",
+		Stackable:   true,
+		Rarity:      RarityEpic,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
 )
 
 var (
@@ -88,9 +123,19 @@ var (
 
 var (
 	// Negative
-	AugmentOneMoreBlock = &Augment{
+	AugmentOneMoreBlocks = &Augment{
 		Name:        "More blocks",
 		Description: "Wait, this game was designed with 3 blocks per spawn at maximum...",
+		Stackable:   false,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentTallerBlocks = &Augment{
+		Name:        "Taller blocks",
+		Description: "Some blocks are taller than the other, how is this supposed to make it harder without a jump ?",
 		Stackable:   false,
 		Rarity:      RarityNegative,
 		Cost: Cost{
@@ -136,6 +181,16 @@ var (
 		Cost: Cost{
 			Kind:  CostKindHP,
 			Value: 1,
+		},
+	}
+	AugmentCancelLastPositive = &Augment{
+		Name:        "Broken feature",
+		Description: "Sorry about that, it might break the last abusive bug, but hey it's a fix !",
+		Stackable:   true,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
 		},
 	}
 )

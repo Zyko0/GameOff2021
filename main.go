@@ -102,23 +102,26 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	// Buffer intermediate draw
-	x, y, z := core.XYZToGraphics(g.level.Player.GetX(), g.level.Player.GetY(), g.level.Player.GetZ())
-	g.buffer.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
-		Uniforms: map[string]interface{}{
-			"ScreenSize":     []float32{float32(logic.GameSquareDim), float32(logic.GameSquareDim)},
-			"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
-			"PlayerRadius":   float32(g.level.Player.GetRadius()),
-			"Camera":         g.level.Settings.ActualSettings.CameraPosition,
+	if !g.paused { // Save gpu resources if game is paused
+		x, y, z := core.XYZToGraphics(g.level.Player.GetX(), g.level.Player.GetY(), g.level.Player.GetZ())
+		g.buffer.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
+			Uniforms: map[string]interface{}{
+				"ScreenSize":     []float32{float32(logic.GameSquareDim), float32(logic.GameSquareDim)},
+				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
+				"PlayerRadius":   float32(g.level.Player.GetRadius()),
+				"Camera":         g.level.Settings.ActualSettings.CameraPosition,
+				"Distance":       float32(g.level.Distance),
 
-			"BlockCount":     float32(len(g.level.Blocks)),
-			"BlockPositions": g.cache.BlockPositions,
-			"BlockSizes":     g.cache.BlockSizes,
+				"BlockCount":     float32(len(g.level.Blocks)),
+				"BlockPositions": g.cache.BlockPositions,
+				"BlockSizes":     g.cache.BlockSizes,
 
-			"Palette0": graphics.PlayerPalette,
-			"Palette1": graphics.BlockPalette,
-			"Palette2": graphics.RoadPalette,
-		},
-	})
+				"Palette0": graphics.PlayerPalette,
+				"Palette1": graphics.BlockPalette,
+				"Palette2": graphics.RoadPalette,
+			},
+		})
+	}
 	// Draw buffer to screen
 	screen.DrawImage(g.buffer, &ebiten.DrawImageOptions{
 		GeoM:   geom,

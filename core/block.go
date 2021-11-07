@@ -6,9 +6,7 @@ import (
 )
 
 const (
-	DefaultSpawnDepth = 30.
-
-	BlockBaseSpeed = 0.1
+	DefaultSpawnDepth = 27.
 
 	BlockWidth0 = 0.2
 	BlockWidth1 = 0.4
@@ -24,8 +22,6 @@ type Block struct {
 	x, y, z       float64
 	hCollider     *resolv.Object
 	depthCollider *resolv.Object
-
-	speed float64
 }
 
 func newBlock(x, y, width, height, speed float64) *Block {
@@ -33,7 +29,7 @@ func newBlock(x, y, width, height, speed float64) *Block {
 	return &Block{
 		x: x + width/2,
 		y: height / 2,
-		z: DefaultSpawnDepth,
+		z: DefaultSpawnDepth + width,
 		hCollider: internal.NewBlockObject(
 			x,
 			y,
@@ -48,8 +44,6 @@ func newBlock(x, y, width, height, speed float64) *Block {
 			height,
 			id,
 		),
-
-		speed: speed,
 	}
 }
 

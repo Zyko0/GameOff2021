@@ -18,12 +18,14 @@ const (
 	PlaneIndex = 3.
 	
 	MaxBlocks = 32.
+	MaxDepth = 30.
 )
 
 var ScreenSize vec2
 var PlayerPosition vec3
 var PlayerRadius float
 var Camera vec3
+var Distance float
 
 var BlockCount float
 var BlockPositions [32]vec3
@@ -67,21 +69,25 @@ func palette(t float, a, b, c, d vec4) vec3 {
 func colorize(p vec3, t, index float) vec3 {
 	var pal [4]vec4
 
-	if index == 0. {
+	if index == PlayerIndex {
 		const scale = 16.
 
+		// X Rotation
 		s := sin(PlayerPosition.x*8.)
 		c := cos(PlayerPosition.x*8.)
-		m := mat2(c, -s, s, c)
-		t = noise(p.xy*m*scale)
+		mx := mat2(c, -s, s, c)
+		t = noise(p.xy*mx*scale)
 		pal = Palette0
-	} else if index == 1. {
+	} else if index == BlockIndex {
 		t = noise(p.xy*8.)
 		pal = Palette1
-	} else if index == 2. {
-		t = noise(p.xy*8.)
+	} else if index == RoadIndex {
+		p.z -= Distance
+		t = noise(p.xz*2.)
+		t *= (1+noise(p.xz*4.))
+		t *= (1+noise(p.xz*6.))
 		pal = Palette2
-	} else if index == 3. {
+	} else if index == PlaneIndex {
 		t = noise(p.xy*8.)
 		pal = Palette3
 	}
@@ -162,7 +168,7 @@ func sdScene(p vec3) vec4 {
 func rayMarch(ro, rd vec3, start, end float) vec4 {
 	const (
 		MaxSteps = 64. // TODO: Can lower this constant on-need for performance
-		Precision = 0.001
+		Precision = 0.005 // TODO: was 0.001
 	)
 
 	depth := start
@@ -231,11 +237,11 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
   	ro := Camera
 	rd := normalize(vec3(uv, -1.)) // ray direction
 
-	depthclr := rayMarch(ro, rd, 0., 50.)
+	depthclr := rayMarch(ro, rd, 0., MaxDepth)
 	d := depthclr.x
 	clr := depthclr.yzw
 
-	if (d > 50.0) {
+	if (d > MaxDepth) {
 		clr = bgColor // ray didn't hit anything
 	} else {
 		p := ro + rd * d

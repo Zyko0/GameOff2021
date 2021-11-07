@@ -34,20 +34,18 @@ func newBlock(x, y, width, height, speed float64) *Block {
 		x: x + width/2,
 		y: height / 2,
 		z: DefaultSpawnDepth,
-		hCollider: internal.NewObject(
+		hCollider: internal.NewBlockObject(
 			x,
 			y,
 			width,
 			height,
-			"block",
 			id,
 		),
-		depthCollider: internal.NewObject(
+		depthCollider: internal.NewBlockObject(
 			DefaultSpawnDepth,
 			y,
 			width,
 			height,
-			"block",
 			id,
 		),
 

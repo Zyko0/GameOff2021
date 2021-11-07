@@ -118,12 +118,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		Filter: ebiten.FilterLinear,
 	})
 	// Debug
-	dbg := fmt.Sprintf("PlayerPos %.2f,%.2f - BlockPos %.2f,%.2f",
-		g.level.Player.GetHCollider().X,
-		g.level.Player.GetHCollider().Y,
-		g.level.Blocks[0].GetHCollider().X,
-		g.level.Blocks[0].GetHCollider().Y,
-	)
+	var dbg string
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("TPS %.2f - FPS %.2f - BlockCount %d - Score %d - Speed %.2f - HP %d - %s",
 			ebiten.CurrentTPS(),

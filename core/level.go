@@ -97,8 +97,7 @@ func (l *Level) Update() {
 	}
 	// Every 240 ticks, add a block TODO: this is tmp
 	if l.tick%240 == 0 {
-		// blocks := spawnBlocks(l.Speed*0.075, l.Settings.actualSettings.maxBlocksSpawn)
-		blocks := spawnBlocks(0.075, l.Settings.actualSettings.maxBlocksSpawn)
+		blocks := spawnBlocks(l.Speed*0.075, l.Settings.actualSettings.maxBlocksSpawn)
 		for _, b := range blocks {
 			l.hSpace.Add(b.hCollider)
 			l.depthSpace.Add(b.depthCollider)

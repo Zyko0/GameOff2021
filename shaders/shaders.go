@@ -213,7 +213,7 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	bgColor := vec3(0.1, 0.1, 0.1)
 	uv := (position.xy / ScreenSize) * 2. - 1.
 
-  	ro := vec3(0., 0., -1.) // camera position
+  	ro := vec3(0., 0., -1.25) // camera position
 	rd := normalize(vec3(uv, -1.)) // ray direction
 
 	depthclr := rayMarch(ro, rd, 0., 50.)

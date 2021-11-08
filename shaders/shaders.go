@@ -100,7 +100,8 @@ func translate(p, offset vec3) vec3 {
 }
 
 func sdSphere(p vec3, r float, offset vec3, index float) vec4 {
-	d := length(p - offset) - r
+	p = translate(p, offset)
+	d := length(p) - r
 
 	return vec4(d, colorize(p, -d, index))
 }
@@ -108,14 +109,16 @@ func sdSphere(p vec3, r float, offset vec3, index float) vec4 {
 func sdRoundBox(p, b, offset vec3, index float) vec4 {
 	const r = 0.075
 
-	q := abs(p - offset) - b
+	p = translate(p, offset)
+	q := abs(p) - b
   	d := length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0) - r
 
 	return vec4(d, colorize(p, -d, index))
 }
 
 func sdBox(p, b, offset vec3, index float) vec4 {
-	q := abs(p - offset) - b
+	p = translate(p, offset)
+	q := abs(p) - b
   	d := length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)
 
 	return vec4(d, colorize(p, -d, index))
@@ -217,7 +220,6 @@ func softShadow(ro, rd vec3, mint, tmax float) float {
 
 	res := 1.0
 	t := mint
-  
 	for i := 0.; i < MaxSteps; i++ {
 		h := sdScene(ro + rd * t).x
 		res = min(res, 8.0*h/t)
@@ -251,7 +253,7 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	} else {
 		p := ro + rd * d
     	
-		// Lights stuff
+		// Light stuff
 		normal := calcNormal(p)
     	lightPosition := ro - vec3(0, 16., -32.) // let's say light is at camera position
     	lightDirection := normalize(lightPosition - p)

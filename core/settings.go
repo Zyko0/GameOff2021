@@ -1,6 +1,9 @@
 package core
 
-import "github.com/Zyko0/GameOff2021/core/augments"
+import (
+	"github.com/Zyko0/GameOff2021/core/augments"
+	"github.com/Zyko0/GameOff2021/logic"
+)
 
 const (
 	MaxPlayerSpeed = 0.02
@@ -31,9 +34,9 @@ func newBaseSettings() *baseSettings {
 		MaxBlocksSpawn: 3,
 		LinesDebug:     false,
 		CameraPosition: []float32{0, 0, -1.25},
-		SpawnInterval:  360,
+		SpawnInterval:  logic.TPS * 3,
 		Circular:       false,
-		PlayerSpeed:    0.005,
+		PlayerSpeed:    0.01,
 	}
 }
 

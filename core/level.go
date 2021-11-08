@@ -153,11 +153,9 @@ func (l *Level) Update() {
 	l.Distance += (l.Speed * BlockDefaultSpeed)
 
 	// Every 500 score increase speed by 0.5
-	l.Speed = 3.0
-	/*
-		if l.score%500 == 0 {
-			l.Speed += 0.5
-		}*/
+	if l.score%500 == 0 {
+		l.Speed += 0.5
+	}
 }
 
 func (l *Level) GetPlayerHP() int {

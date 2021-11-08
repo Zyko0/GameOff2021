@@ -100,8 +100,7 @@ func translate(p, offset vec3) vec3 {
 }
 
 func sdSphere(p vec3, r float, offset vec3, index float) vec4 {
-	p = translate(p, offset)
-	d := length(p) - r
+	d := length(p - offset) - r
 
 	return vec4(d, colorize(p, -d, index))
 }
@@ -212,9 +211,10 @@ func phong(lightDir, normal, rd, clr vec3) vec3 {
   
 func softShadow(ro, rd vec3, mint, tmax float) float {
 	const (
-		MaxSteps = 16.
+		MaxSteps = 8.
 		Precision = 0.001
 	)
+
 	res := 1.0
 	t := mint
   
@@ -233,6 +233,11 @@ func softShadow(ro, rd vec3, mint, tmax float) float {
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	bgColor := vec3(0.1, 0.1, 0.1)
 	uv := (position.xy / ScreenSize) * 2. - 1.
+
+	// Early abort if at top part of screen
+	if uv.y < 0. {
+		return vec4(bgColor, 1.)
+	}
 
   	ro := Camera
 	rd := normalize(vec3(uv, -1.)) // ray direction

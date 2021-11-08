@@ -145,20 +145,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	/*
-		f, err := os.Create("beat.prof")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer f.Close()
-		err = pprof.StartCPUProfile(f)
-		if err != nil {
-			fmt.Println("couldn't profile:", err)
-			return
-		}
-		defer pprof.StopCPUProfile()
-	*/
-
 	ebiten.SetMaxTPS(logic.TPS)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	ebiten.SetFullscreen(true)

@@ -127,13 +127,6 @@ func (l *Level) Update() {
 					if oh.Shape.Intersection(0, 0, l.Player.hCollider.Shape) != nil {
 						l.playerHP--
 						l.invulnTime = InvulnTime
-						// If player is dead, let's show where the block has hit
-						// TODO: not sure it's nice
-						/*
-							if l.playerHP <= l.Settings.actualSettings.hpToGameOver {
-								dw = depthHit.MTV.X()
-							}
-						*/
 					}
 				}
 			}
@@ -146,7 +139,7 @@ func (l *Level) Update() {
 	// Remove any blocks that have fallen off the screen
 	for i := 0; i < len(l.Blocks); i++ {
 		b := l.Blocks[i]
-		if b.z < 0 {
+		if b.z < 3. {
 			l.hSpace.Remove(b.hCollider)
 			l.depthSpace.Remove(b.depthCollider)
 			l.Blocks[i] = l.Blocks[len(l.Blocks)-1]

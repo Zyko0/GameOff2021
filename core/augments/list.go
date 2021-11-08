@@ -12,6 +12,7 @@ const (
 	IDHighSpawn
 	IDHeartSpawn
 	IDCancelLastNegative
+	IDSlowMotion
 	// Legendary
 	IDNegativeHearts
 	IDCircular
@@ -23,6 +24,8 @@ const (
 	IDHalfwaySpawns
 	IDNothing
 	IDCancelLastPositive
+	IDAugmentLessAugments
+	// TODO: Drunk ? Offseted block positions ?
 )
 
 var (
@@ -89,6 +92,16 @@ var (
 		Name:        "Bug fix",
 		Description: "Okay the last negative bug you encountered is now fixed.",
 		Stackable:   true,
+		Rarity:      RarityEpic,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentSlowMotion = &Augment{
+		Name:        "Lag",
+		Description: "Every N seconds, you will experience a 2 second lag.",
+		Stackable:   false,
 		Rarity:      RarityEpic,
 		Cost: Cost{
 			Kind:  CostNone,
@@ -186,6 +199,16 @@ var (
 	AugmentCancelLastPositive = &Augment{
 		Name:        "Broken feature",
 		Description: "Sorry about that, it might break the last abusive bug, but hey it's a fix !",
+		Stackable:   true,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentLessAugments = &Augment{
+		Name:        "Less bugs",
+		Description: "We are getting closer to a clean build, bugs will show less often, people don't like bugs, right ?",
 		Stackable:   true,
 		Rarity:      RarityNegative,
 		Cost: Cost{

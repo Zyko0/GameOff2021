@@ -37,4 +37,5 @@ type Augment struct {
 	Stackable   bool
 	Rarity      Rarity
 	Cost        Cost
+	Constraints []Augment // TODO: some augments require other augments
 }

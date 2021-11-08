@@ -88,8 +88,8 @@ func colorize(p vec3, t, index float) vec3 {
 		t *= (1+noise(p.xz*6.))
 		pal = Palette2
 	} else if index == PlaneIndex {
-		t = noise(p.xy*8.)
-		pal = Palette3
+		// TODO: make the plane more fancy maybe ?
+		return vec3(1., 0., 0.)
 	}
 	
 	return palette(t, pal[0], pal[1], pal[2], pal[3])
@@ -99,47 +99,68 @@ func translate(p, offset vec3) vec3 {
 	return p - offset
 }
 
-func sdSphere(p vec3, r float, offset vec3, index float) vec4 {
+func sdSphere(p vec3, r float, offset vec3, index float) mat3 {
 	p = translate(p, offset)
 	d := length(p) - r
 
-	return vec4(d, colorize(p, -d, index))
+	return mat3(
+		vec3(d, index, 0.),
+		offset,
+		vec3(0.),
+	)
 }
 
-func sdRoundBox(p, b, offset vec3, index float) vec4 {
+func sdRoundBox(p, b, offset vec3, index float) mat3 {
 	const r = 0.075
 
 	p = translate(p, offset)
 	q := abs(p) - b
   	d := length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0) - r
 
-	return vec4(d, colorize(p, -d, index))
+	return mat3(
+		vec3(d, index, 0.),
+		offset,
+		vec3(0.),
+	)
 }
 
-func sdBox(p, b, offset vec3, index float) vec4 {
+func sdBox(p, b, offset vec3, index float) mat3 {
 	p = translate(p, offset)
 	q := abs(p) - b
   	d := length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)
 
-	return vec4(d, colorize(p, -d, index))
+	return mat3(
+		vec3(d, index, 0.),
+		offset,
+		vec3(0.),
+	)
 }
 
-func sdPlane(p, n vec3, h float, index float) vec4 {
+func sdPlane(p, n vec3, h float, index float) mat3 {
 	// n must be normalized
 	d := dot(p,n) + h
 
-	return vec4(d, vec3(1, 0, 0))
+	return mat3(
+		vec3(d, index, 0.),
+		vec3(0.),
+		vec3(0.),
+	)
 }
 
-func minWithColor(obj1, obj2 vec4) vec4 {
-	if obj2.x < obj1.x {
+func minWithData(obj1, obj2 mat3) mat3 {
+	if obj2[0].x < obj1[0].x {
 		return obj2
 	}
 
 	return obj1
 }
 
-func sdScene(p vec3) vec4 {
+func colorFromObj(p vec3, obj mat3) vec3 {
+	p = translate(p, obj[1])
+	return colorize(p, -obj[0].x, obj[0].y)
+}
+
+func sdScene(p vec3) mat3 {
 	scene := sdPlane(p, normalize(vec3(0., -1., 0.)), 1., PlaneIndex) // default floor
 
 	roadl := 100.
@@ -150,9 +171,10 @@ func sdScene(p vec3) vec4 {
 
 	sphereOffset := vec3(0., 1., 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)
+	// * 2 radius is a hack to make sense with software value
 	spherePlayer := sdSphere(p, PlayerRadius*2., sphereOffset, PlayerIndex)
 	
-	scene = minWithColor(scene, minWithColor(road, spherePlayer))
+	scene = minWithData(scene, minWithData(road, spherePlayer))
 	for i := 0.; i < MaxBlocks; i++ {
 		if i >= BlockCount {
 			break
@@ -161,40 +183,41 @@ func sdScene(p vec3) vec4 {
 		blockOffset := vec3(0., 1, 0.)
 		blockOffset = translate(blockOffset, BlockPositions[int(i)])
 		block := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex) // TODO: sdRoundBox
-		scene = minWithColor(scene, block)
+		scene = minWithData(scene, block)
 	}
-
+	
 	return scene
 }
 
-func rayMarch(ro, rd vec3, start, end float) vec4 {
+func rayMarch(ro, rd vec3, start, end float) mat3 {
 	const (
 		MaxSteps = 64. // TODO: Can lower this constant on-need for performance
 		Precision = 0.005 // TODO: was 0.001
 	)
 
 	depth := start
-	obj := vec4(0.)
+	var obj mat3
 	for i := 0; i < MaxSteps; i++ {
 		p := ro + depth * rd
 		obj = sdScene(p)
-		depth += obj.x
-    	if obj.x < Precision || depth > end {
+		depth += obj[0].x
+    	if obj[0].x < Precision || depth > end {
 			break
 		}
 	}
 
-	return vec4(depth, obj.yzw)
+	obj[0].x = depth
+	return obj
 }
 
 func calcNormal(p vec3) vec3 {
     e := vec2(1.0, -1.0) * 0.0005 // epsilon
     
 	return normalize(
-      e.xyy * sdScene(p + e.xyy).x +
-      e.yyx * sdScene(p + e.yyx).x +
-      e.yxy * sdScene(p + e.yxy).x +
-      e.xxx * sdScene(p + e.xxx).x)
+    	e.xyy * sdScene(p + e.xyy)[0].x +
+    	e.yyx * sdScene(p + e.yyx)[0].x +
+    	e.yxy * sdScene(p + e.yxy)[0].x +
+    	e.xxx * sdScene(p + e.xxx)[0].x)
 }
 
 func phong(lightDir, normal, rd, clr vec3) vec3 {
@@ -221,7 +244,7 @@ func softShadow(ro, rd vec3, mint, tmax float) float {
 	res := 1.0
 	t := mint
 	for i := 0.; i < MaxSteps; i++ {
-		h := sdScene(ro + rd * t).x
+		h := sdScene(ro + rd * t)[0].x
 		res = min(res, 8.0*h/t)
 		t += clamp(h, 0.02, 0.10)
 		if h < Precision || t > tmax {
@@ -244,15 +267,18 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
   	ro := Camera
 	rd := normalize(vec3(uv, -1.)) // ray direction
 
-	depthclr := rayMarch(ro, rd, 0., MaxDepth)
-	d := depthclr.x
-	clr := depthclr.yzw
+	obj := rayMarch(ro, rd, 0., MaxDepth)
+	d := obj[0].x
+
+	var clr vec3
 
 	if (d > MaxDepth) {
 		clr = bgColor // ray didn't hit anything
 	} else {
-		p := ro + rd * d
-    	
+		p := ro + rd * d    	
+
+		clr = colorFromObj(p, obj)
+
 		// Light stuff
 		normal := calcNormal(p)
     	lightPosition := ro - vec3(0, 16., -32.) // let's say light is at camera position

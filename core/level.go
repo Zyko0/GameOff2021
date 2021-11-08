@@ -139,7 +139,7 @@ func (l *Level) Update() {
 	// Remove any blocks that have fallen off the screen
 	for i := 0; i < len(l.Blocks); i++ {
 		b := l.Blocks[i]
-		if b.z < 3. {
+		if b.z < 2. {
 			l.hSpace.Remove(b.hCollider)
 			l.depthSpace.Remove(b.depthCollider)
 			l.Blocks[i] = l.Blocks[len(l.Blocks)-1]
@@ -153,9 +153,11 @@ func (l *Level) Update() {
 	l.Distance += (l.Speed * BlockDefaultSpeed)
 
 	// Every 500 score increase speed by 0.5
-	if l.score%500 == 0 {
-		l.Speed += 0.5
-	}
+	l.Speed = 3.0
+	/*
+		if l.score%500 == 0 {
+			l.Speed += 0.5
+		}*/
 }
 
 func (l *Level) GetPlayerHP() int {

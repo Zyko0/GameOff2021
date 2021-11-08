@@ -30,20 +30,26 @@ type Game struct {
 
 	level *core.Level
 
-	buffer *ebiten.Image
-	cache  *graphics.Cache
+	offscreen *ebiten.Image
+	cache     *graphics.Cache
+
+	needsRedraw bool
 }
 
 func New() *Game {
 	return &Game{
+		paused:      false,
+		needsRedraw: false,
+
 		level: core.NewLevel(),
 
-		buffer: ebiten.NewImage(logic.GameSquareDim, logic.GameSquareDim),
-		cache:  graphics.NewCache(),
+		offscreen: ebiten.NewImage(logic.GameSquareDim, logic.GameSquareDim),
+		cache:     graphics.NewCache(),
 	}
 }
 
 func (g *Game) Update() error {
+	g.needsRedraw = true
 	// Pause
 	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
 		g.paused = !g.paused
@@ -102,9 +108,9 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	// Buffer intermediate draw
-	if !g.paused { // Save gpu resources if game is paused
+	if !g.paused && g.needsRedraw { // Save gpu resources if game is paused
 		x, y, z := core.XYZToGraphics(g.level.Player.GetX(), g.level.Player.GetY(), g.level.Player.GetZ())
-		g.buffer.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
+		g.offscreen.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
 			Uniforms: map[string]interface{}{
 				"ScreenSize":     []float32{float32(logic.GameSquareDim), float32(logic.GameSquareDim)},
 				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
@@ -121,9 +127,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"Palette2": graphics.RoadPalette,
 			},
 		})
+		// Let Update() decide whenever there's a need for drawing the whole scene again
+		g.needsRedraw = false
 	}
 	// Draw buffer to screen
-	screen.DrawImage(g.buffer, &ebiten.DrawImageOptions{
+	screen.DrawImage(g.offscreen, &ebiten.DrawImageOptions{
 		GeoM:   geom,
 		Filter: ebiten.FilterLinear,
 	})

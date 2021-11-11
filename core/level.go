@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/Zyko0/GameOff2021/core/internal"
+	"github.com/Zyko0/GameOff2021/logic"
 	"github.com/solarlune/resolv"
 )
 
@@ -22,12 +23,12 @@ type Level struct {
 	tick uint64
 
 	invulnTime int
-	playerHP   int
 	score      uint64
 
 	hSpace     *resolv.Space
 	depthSpace *resolv.Space
 
+	PlayerHP int
 	Speed    float64
 	Distance float64
 	Player   *Player
@@ -40,12 +41,12 @@ func NewLevel() *Level {
 		tick: 0,
 
 		invulnTime: 0,
-		playerHP:   4,
 		score:      0,
 
 		hSpace:     internal.NewSpace(RoadWidth, RoadHeight),
 		depthSpace: internal.NewSpace(RoadDepth, RoadHeight),
 
+		PlayerHP: 3,
 		Speed:    DefaultSpeed,
 		Distance: 0,
 		Player:   NewPlayer(),
@@ -58,7 +59,7 @@ func NewLevel() *Level {
 	return level
 }
 
-func spawnBlocks(speed float64, maxSpawn int) []*Block {
+func spawnBlocks(speed, depth float64, maxSpawn int) []*Block {
 	blockCount := rand.Intn(maxSpawn) + 1
 	blocks := make([]*Block, blockCount)
 	indices := []int{0, 1, 2, 3, 4}
@@ -72,7 +73,7 @@ func spawnBlocks(speed float64, maxSpawn int) []*Block {
 		indices[idx] = indices[len(indices)-1]
 		indices = indices[:len(indices)-1]
 
-		blocks[i] = newBlock(x, 0, width, height, speed)
+		blocks[i] = newBlock(x, 0, depth, width, height, speed)
 	}
 
 	return blocks
@@ -101,7 +102,7 @@ func (l *Level) Update() {
 	}
 	// Every spawninterval ticks, spawn some
 	if l.tick%l.Settings.SpawnInterval == 0 {
-		blocks := spawnBlocks(l.Speed*BlockDefaultSpeed, l.Settings.MaxBlocksSpawn)
+		blocks := spawnBlocks(l.Speed*BlockDefaultSpeed, l.Settings.SpawnDepth, l.Settings.MaxBlocksSpawn)
 		for _, b := range blocks {
 			l.hSpace.Add(b.hCollider)
 			l.depthSpace.Add(b.depthCollider)
@@ -125,7 +126,7 @@ func (l *Level) Update() {
 						continue
 					}
 					if oh.Shape.Intersection(0, 0, l.Player.hCollider.Shape) != nil {
-						l.playerHP--
+						l.PlayerHP--
 						l.invulnTime = InvulnTime
 					}
 				}
@@ -149,17 +150,11 @@ func (l *Level) Update() {
 	}
 
 	l.tick++
-	l.score++
 	l.Distance += (l.Speed * BlockDefaultSpeed)
-
-	// Every 500 score increase speed by 0.5
-	if l.score%500 == 0 {
-		l.Speed += 0.5
+	// Every 15 second, increase global speed
+	if l.tick%(logic.TPS*15) == 0 {
+		l.Speed += 0.25
 	}
-}
-
-func (l *Level) GetPlayerHP() int {
-	return l.playerHP
 }
 
 func (l *Level) GetSpeed() float64 {
@@ -167,5 +162,9 @@ func (l *Level) GetSpeed() float64 {
 }
 
 func (l *Level) GetScore() uint64 {
-	return l.score
+	return uint64(l.Distance)
+}
+
+func (l *Level) GetTicks() uint64 {
+	return l.tick
 }

@@ -10,7 +10,6 @@ type AugmentManager struct {
 	currentAugmentsByID []*augments.Augment
 
 	possibleAugmentsCommon    []*augments.Augment
-	possibleAugmentsRare      []*augments.Augment
 	possibleAugmentsEpic      []*augments.Augment
 	possibleAugmentsLegendary []*augments.Augment
 	possibleAugmentsNegative  []*augments.Augment
@@ -23,7 +22,6 @@ func NewAugmentManager() *AugmentManager {
 		currentAugmentsByID: make([]*augments.Augment, augments.IDMax),
 
 		possibleAugmentsCommon:    make([]*augments.Augment, 0, augments.IDMax),
-		possibleAugmentsRare:      make([]*augments.Augment, 0, augments.IDMax),
 		possibleAugmentsEpic:      make([]*augments.Augment, 0, augments.IDMax),
 		possibleAugmentsLegendary: make([]*augments.Augment, 0, augments.IDMax),
 		possibleAugmentsNegative:  make([]*augments.Augment, 0, augments.IDMax),
@@ -34,7 +32,6 @@ func NewAugmentManager() *AugmentManager {
 
 func (am *AugmentManager) generatePossibleAugments() {
 	am.possibleAugmentsCommon = am.possibleAugmentsCommon[:0]
-	am.possibleAugmentsRare = am.possibleAugmentsRare[:0]
 	am.possibleAugmentsEpic = am.possibleAugmentsEpic[:0]
 	am.possibleAugmentsLegendary = am.possibleAugmentsLegendary[:0]
 	am.possibleAugmentsNegative = am.possibleAugmentsNegative[:0]
@@ -55,12 +52,14 @@ func (am *AugmentManager) generatePossibleAugments() {
 		if am.currentAugmentsByID[a.ID] != nil && !a.Stackable {
 			continue
 		}
+		// Hard fixes
+		switch a.ID {
+
+		}
 		// Add and order by rarity
 		switch a.Rarity {
 		case augments.RarityCommon:
 			am.possibleAugmentsCommon = append(am.possibleAugmentsCommon, a)
-		case augments.RarityRare:
-			am.possibleAugmentsRare = append(am.possibleAugmentsRare, a)
 		case augments.RarityEpic:
 			am.possibleAugmentsEpic = append(am.possibleAugmentsEpic, a)
 		case augments.RarityLegendary:
@@ -103,14 +102,39 @@ func (am *AugmentManager) RollAugments() []*augments.Augment {
 		return am.rollAugments(am.possibleAugmentsLegendary)
 	case rarity < augments.EpicRarityPercent:
 		return am.rollAugments(am.possibleAugmentsEpic)
-	case rarity < augments.RareRarityPercent:
-		return am.rollAugments(am.possibleAugmentsRare)
 	default:
 		return am.rollAugments(am.possibleAugmentsCommon)
 	}
 }
 
 func (am *AugmentManager) AddAugment(augment *augments.Augment) {
+	// Hard check for the removal of last negative augment
+	if augment.ID == augments.IDRemoveLastNegative {
+		var last *augments.Augment
+		for i := range am.CurrentAugments {
+			if am.CurrentAugments[i].Rarity == augments.RarityNegative {
+				last = am.CurrentAugments[i]
+			}
+		}
+		if last != nil {
+			am.RemoveAugment(last)
+		}
+		return
+	}
+	// Hard check for the removal of last positive augment
+	if augment.ID == augments.IDRemoveLastNegative {
+		var last *augments.Augment
+		for i := range am.CurrentAugments {
+			if am.CurrentAugments[i].Rarity != augments.RarityNegative {
+				last = am.CurrentAugments[i]
+			}
+		}
+		if last != nil {
+			am.RemoveAugment(last)
+		}
+		return
+	}
+	// Add augment
 	am.currentAugmentsByID[augment.ID] = augment
 	am.CurrentAugments = append(am.CurrentAugments, augment)
 }

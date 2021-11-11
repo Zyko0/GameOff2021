@@ -6,15 +6,17 @@ var (
 
 func init() {
 	List[IDIncreaseSpeed] = AugmentIncreaseSpeed
+	List[IDDecreaseSpeed] = AugmentDecreaseSpeed
 	List[IDDebugLines] = AugmentDebugLines
 	List[IDActionJump] = AugmentActionJump
+	List[IDActionDash] = AugmentActionDash
 	List[IDHighSpawn] = AugmentHighSpawn
 	List[IDHeartSpawn] = AugmentHeartSpawn
 	List[IDSlowMotion] = AugmentSlowMotion
 	List[IDHeartContainer] = AugmentHeartContainer
 	List[IDNegativeHearts] = AugmentNegativeHearts
 	List[IDCircular] = AugmentCircular
-	List[IDCollisionCheck] = AugmentCollisionCheck
+	List[IDPerfectStep] = AugmentPerfectStep
 	List[IDRemoveLastNegative] = AugmentRemoveLastNegative
 	List[IDOneMoreBlock] = AugmentOneMoreBlock
 	List[IDTallerBlocks] = AugmentTallerBlocks
@@ -22,13 +24,36 @@ func init() {
 	List[IDMoreSpawns] = AugmentMoreSpawns
 	List[IDEvenMoreSpawns] = AugmentEvenMoreSpawns
 	List[IDCloserSpawns] = AugmentCloserSpawns
-	List[IDEvenCloserSpawns] = AugmentEvenCloserSpawns
+	List[IDCloserSpawns2] = AugmentCloserSpawns2
 	List[IDNothing] = AugmentNothing
 	List[IDNothing2] = AugmentNothing2
 	List[IDRemoveLastPositive] = AugmentRemoveLastPositive
 	List[IDLessAugments] = AugmentLessAugments
-	List[IDStrongerBlocks] = AugmentStrongerBlocks
-	List[IDEvenStrongerBlocks] = AugmentEvenStrongerBlocks
+	List[IDHarderBlocks] = AugmentHarderBlocks
+	List[IDHarderBlocks2] = AugmentHarderBlocks2
+
+	// Reprocess description texts for them to fit in card caption
+	for _, a := range List {
+		var desc string
+
+		for i, r := range a.Description {
+			if i > 0 && i%18 == 0 {
+				if r == ' ' {
+					desc += "\n"
+				} else if a.Description[i-1] == ' ' {
+					desc += "\n"
+					desc += string(r)
+				} else {
+					desc += "-"
+					desc += "\n"
+					desc += string(r)
+				}
+			} else {
+				desc += string(r)
+			}
+		}
+		a.Description = desc
+	}
 }
 
 var (
@@ -44,9 +69,20 @@ var (
 			Value: 0,
 		},
 	}
+	AugmentDecreaseSpeed = &Augment{
+		ID:          IDDecreaseSpeed,
+		Name:        "Speed fix",
+		Description: "Decreases the lateral speed of the sphere by 10%.",
+		Stackable:   true,
+		Rarity:      RarityCommon,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
 	AugmentDebugLines = &Augment{
 		ID:          IDDebugLines,
-		Name:        "Developer Mode",
+		Name:        "Dev Mode",
 		Description: "Traces lines between different blocks, disabled in production of course.",
 		Stackable:   false,
 		Rarity:      RarityCommon,
@@ -55,16 +91,23 @@ var (
 			Value: 0,
 		},
 	}
-)
-
-var (
-	// Rare
 	AugmentActionJump = &Augment{
 		ID:          IDActionJump,
 		Name:        "Jump",
 		Description: "It seems your space button now lets you jump. Sorry for having missed this core feature from the release.",
 		Stackable:   false,
-		Rarity:      RarityRare,
+		Rarity:      RarityCommon,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentActionDash = &Augment{
+		ID:          IDActionDash,
+		Name:        "Dash",
+		Description: "Your space button now lets you dash in your last inputted direction.",
+		Stackable:   false,
+		Rarity:      RarityCommon,
 		Cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
@@ -147,9 +190,9 @@ var (
 			Value: 1,
 		},
 	}
-	AugmentCollisionCheck = &Augment{
-		ID:          IDCollisionCheck,
-		Name:        "Collision Check",
+	AugmentPerfectStep = &Augment{
+		ID:          IDPerfectStep,
+		Name:        "Perfect Step",
 		Description: "The sphere now steps exactly from a row to another, broken TODO: really broken",
 		Stackable:   false,
 		Rarity:      RarityLegendary,
@@ -245,15 +288,18 @@ var (
 			Value: 0,
 		},
 	}
-	AugmentEvenCloserSpawns = &Augment{
-		ID:          IDEvenCloserSpawns,
-		Name:        "Even closer spawns",
+	AugmentCloserSpawns2 = &Augment{
+		ID:          IDCloserSpawns2,
+		Name:        "Closer Spawns II",
 		Description: "So blocks spawn closer now, how is the player supposed to react properly ?",
 		Stackable:   false,
 		Rarity:      RarityNegative,
 		Cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
+		},
+		Constraints: []ID{
+			IDCloserSpawns,
 		},
 	}
 	AugmentNothing = &Augment{
@@ -269,7 +315,7 @@ var (
 	}
 	AugmentNothing2 = &Augment{
 		ID:          IDNothing2,
-		Name:        "Nothing",
+		Name:        "Nothing II",
 		Description: "",
 		Stackable:   true,
 		Rarity:      RarityNegative,
@@ -303,9 +349,9 @@ var (
 			Value: 0,
 		},
 	}
-	AugmentStrongerBlocks = &Augment{
-		ID:          IDStrongerBlocks,
-		Name:        "Stronger blocks",
+	AugmentHarderBlocks = &Augment{
+		ID:          IDHarderBlocks,
+		Name:        "Harder Blocks II",
 		Description: "Some blocks deal more damage, you should recognize them.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
@@ -314,9 +360,9 @@ var (
 			Value: 0,
 		},
 	}
-	AugmentEvenStrongerBlocks = &Augment{
-		ID:          IDEvenStrongerBlocks,
-		Name:        "Even stronger blocks",
+	AugmentHarderBlocks2 = &Augment{
+		ID:          IDHarderBlocks2,
+		Name:        "Harder Blocks II",
 		Description: "Some blocks deal even more damage, you should also recognize them.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
@@ -325,7 +371,7 @@ var (
 			Value: 0,
 		},
 		Constraints: []ID{
-			IDStrongerBlocks,
+			IDHarderBlocks,
 		},
 	}
 )

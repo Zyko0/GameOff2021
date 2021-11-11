@@ -41,13 +41,13 @@ func NewGameoverView() *GameoverView {
 	})
 	// Resume text
 	str = "Press 'R' to start a new game"
-	rect = text.BoundString(assets.CardBodyText, str)
+	rect = text.BoundString(assets.CardBodyTextFontFace, str)
 	geom = ebiten.GeoM{}
 	geom.Translate(
 		float64(gameoverCardWidth/2-rect.Max.X/2),
 		float64(96),
 	)
-	text.DrawWithOptions(card, str, assets.CardBodyText, &ebiten.DrawImageOptions{
+	text.DrawWithOptions(card, str, assets.CardBodyTextFontFace, &ebiten.DrawImageOptions{
 		GeoM: geom,
 	})
 

@@ -2,9 +2,8 @@ package augments
 
 const (
 	LegendaryRarityPercent = 0.10
-	EpicRarityPercent      = 0.20
-	RareRarityPercent      = 0.30
-	CommonRarityPercent    = 0.40
+	EpicRarityPercent      = 0.30
+	CommonRarityPercent    = 1.
 	NegativeRarityPercent  = 1. / 5.
 )
 
@@ -13,9 +12,10 @@ type ID byte
 const (
 	// Common
 	IDIncreaseSpeed ID = iota
+	IDDecreaseSpeed
 	IDDebugLines
-	// Rare
 	IDActionJump
+	IDActionDash
 	// Epic
 	IDHighSpawn
 	IDHeartSpawn
@@ -24,7 +24,7 @@ const (
 	// Legendary
 	IDNegativeHearts
 	IDCircular
-	IDCollisionCheck
+	IDPerfectStep
 	IDRemoveLastNegative
 	// Negative
 	IDOneMoreBlock
@@ -33,13 +33,13 @@ const (
 	IDMoreSpawns
 	IDEvenMoreSpawns
 	IDCloserSpawns
-	IDEvenCloserSpawns
+	IDCloserSpawns2
 	IDNothing
 	IDNothing2
 	IDRemoveLastPositive
 	IDLessAugments
-	IDStrongerBlocks
-	IDEvenStrongerBlocks
+	IDHarderBlocks
+	IDHarderBlocks2
 	// TODO: Drunk ? Offseted block positions ?
 
 	IDMax
@@ -63,13 +63,13 @@ type Rarity byte
 const (
 	RarityLegendary Rarity = iota
 	RarityEpic
-	RarityRare
 	RarityCommon
 	RarityNegative
 )
 
 type Augment struct {
 	ID          ID
+	Symbol      string
 	Name        string
 	Description string
 	Stackable   bool

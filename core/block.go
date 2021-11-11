@@ -6,8 +6,6 @@ import (
 )
 
 const (
-	DefaultSpawnDepth = 27.
-
 	BlockWidth0 = 0.2
 	BlockWidth1 = 0.4
 
@@ -24,12 +22,12 @@ type Block struct {
 	depthCollider *resolv.Object
 }
 
-func newBlock(x, y, width, height, speed float64) *Block {
+func newBlock(x, y, z, width, height, speed float64) *Block {
 	id := internal.GetNextID()
 	return &Block{
 		x: x + width/2,
 		y: height / 2,
-		z: DefaultSpawnDepth + width,
+		z: z + width,
 		hCollider: internal.NewBlockObject(
 			x,
 			y,
@@ -38,7 +36,7 @@ func newBlock(x, y, width, height, speed float64) *Block {
 			id,
 		),
 		depthCollider: internal.NewBlockObject(
-			DefaultSpawnDepth-width/2,
+			z-width/2,
 			y,
 			width,
 			height,

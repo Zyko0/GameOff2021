@@ -40,13 +40,13 @@ func NewPauseView() *PauseView {
 	})
 	// Resume text
 	str = "Press 'P' to resume the game"
-	rect = text.BoundString(assets.CardBodyText, str)
+	rect = text.BoundString(assets.CardBodyTextFontFace, str)
 	geom = ebiten.GeoM{}
 	geom.Translate(
 		float64(pauseCardWidth/2-rect.Max.X/2),
 		float64(96),
 	)
-	text.DrawWithOptions(card, str, assets.CardBodyText, &ebiten.DrawImageOptions{
+	text.DrawWithOptions(card, str, assets.CardBodyTextFontFace, &ebiten.DrawImageOptions{
 		GeoM: geom,
 	})
 

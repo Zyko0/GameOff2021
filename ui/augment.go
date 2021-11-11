@@ -1,11 +1,15 @@
 package ui
 
 import (
+	"fmt"
+
+	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/core/augments"
 	"github.com/Zyko0/GameOff2021/graphics"
 	"github.com/Zyko0/GameOff2021/logic"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
 const (
@@ -20,27 +24,53 @@ const (
 	augmentCardWidth          = (augmentBgWidth - augmentCardIntervalOffset*4) / 3
 	augmentCardHeight         = augmentBgHeight/5*4 - augmentCardIntervalOffset
 	augmentCardOffsetY        = augmentBgOffsetY + (augmentBgHeight - augmentCardHeight) - augmentCardIntervalOffset
+
+	augmentDescriptionCardOffset  = 8
+	augmentDescriptionCardWidth   = augmentCardWidth - augmentDescriptionCardOffset*2
+	augmentDescriptionCardHeight  = augmentCardHeight/5*3 - augmentDescriptionCardOffset
+	augmentDescriptionCardOffsetY = augmentCardHeight - augmentDescriptionCardHeight - augmentDescriptionCardOffset
+)
+
+var (
+	augmentBgColorCommon    = []float32{0.36, 0.48, 0.92, 0.7}
+	augmentBgColorEpic      = []float32{2. / 3., 0.078, 0.94, 0.7}
+	augmentBgColorLegendary = []float32{1.0, 0.75, 0, 0.7}
+	augmentBgColorNegative  = []float32{0.7, 0, 0, 0.7}
+
+	augmentDescriptionBgColor = []float32{1, 1, 1, 0.3}
 )
 
 type AugmentView struct {
 	active bool
 
-	lastCursorX, lastCursorY int
-	background               *ebiten.Image
+	lastCursorX int
+	lastCursorY int
+	card        *ebiten.Image
 
 	SelectedIndex int
 	Augments      []*augments.Augment
 }
 
 func NewAugmentView() *AugmentView {
-	bg := ebiten.NewImage(augmentBgWidth, augmentBgHeight)
-	graphics.DrawRect(bg, 0, 0, augmentBgWidth, augmentBgHeight, []float32{0.1, 0.1, 0.1, 0.9})
-	graphics.DrawRectBorder(bg, 0, 0, augmentBgWidth, augmentBgHeight, 1, []float32{1, 1, 1, 0.9})
+	card := ebiten.NewImage(augmentBgWidth, augmentBgHeight)
+	graphics.DrawRect(card, 0, 0, augmentBgWidth, augmentBgHeight, []float32{0.1, 0.1, 0.1, 0.9})
+	graphics.DrawRectBorder(card, 0, 0, augmentBgWidth, augmentBgHeight, 1, []float32{1, 1, 1, 0.9})
+	// Title
+	str := "Exploit a bug"
+	rect := text.BoundString(assets.CardTitleFontFace, str)
+	geom := ebiten.GeoM{}
+	geom.Translate(
+		float64(augmentBgWidth/2-rect.Max.X/2),
+		float64(48),
+	)
+	text.DrawWithOptions(card, str, assets.CardTitleFontFace, &ebiten.DrawImageOptions{
+		GeoM: geom,
+	})
 
 	return &AugmentView{
 		active: false,
 
-		background: bg,
+		card: card,
 
 		SelectedIndex: 0,
 		Augments:      nil,
@@ -117,19 +147,78 @@ func (av *AugmentView) Draw(screen *ebiten.Image) {
 		float64(augmentBgOffsetX+augmentOffsetX),
 		float64(augmentBgOffsetY),
 	)
-	screen.DrawImage(av.background, &ebiten.DrawImageOptions{
+	screen.DrawImage(av.card, &ebiten.DrawImageOptions{
 		GeoM: geom,
 	})
 	// Augment cards
 	for i := range av.Augments {
+		var clr []float32
+
+		switch av.Augments[i].Rarity {
+		case augments.RarityCommon:
+			clr = augmentBgColorCommon
+		case augments.RarityEpic:
+			clr = augmentBgColorEpic
+		case augments.RarityLegendary:
+			clr = augmentBgColorLegendary
+		case augments.RarityNegative:
+			clr = augmentBgColorNegative
+		}
+		// Card rectangle
+		x := augmentOffsetX + augmentBgOffsetX + float32(i+1)*augmentCardIntervalOffset + float32(i)*augmentCardWidth
+		y := float32(augmentCardOffsetY)
 		graphics.DrawRect(
 			screen,
-			augmentOffsetX+augmentBgOffsetX+float32(i+1)*augmentCardIntervalOffset+float32(i)*augmentCardWidth,
-			augmentCardOffsetY,
+			x, y,
 			augmentCardWidth,
 			augmentCardHeight,
-			[]float32{0.7, 0., 0., 0.5},
+			clr,
 		)
+		// Card title text
+		rect := text.BoundString(assets.CardBodyTitleFontFace, av.Augments[i].Name)
+		geom := ebiten.GeoM{}
+		geom.Translate(
+			float64(x)+float64(augmentCardWidth)/2-float64(rect.Max.X)/2,
+			float64(y)+32,
+		)
+		text.DrawWithOptions(screen, av.Augments[i].Name, assets.CardBodyTitleFontFace, &ebiten.DrawImageOptions{
+			GeoM: geom,
+		})
+		// Description rectangle
+		graphics.DrawRect(
+			screen,
+			x+augmentDescriptionCardOffset,
+			y+augmentDescriptionCardOffsetY,
+			augmentDescriptionCardWidth,
+			augmentDescriptionCardHeight,
+			augmentDescriptionBgColor,
+		)
+		// Description text body
+		geom = ebiten.GeoM{}
+		geom.Translate(
+			float64(x)+float64(augmentDescriptionCardOffset)+4,
+			float64(y)+augmentDescriptionCardOffsetY+16,
+		)
+		rect = text.BoundString(assets.CardBodyDescriptionTextFontFace, av.Augments[i].Description)
+		text.DrawWithOptions(screen, av.Augments[i].Description, assets.CardBodyDescriptionTextFontFace, &ebiten.DrawImageOptions{
+			GeoM: geom,
+		})
+		// Cost
+		if av.Augments[i].Cost.Kind != augments.CostNone {
+			str := "Cost: "
+			switch av.Augments[i].Cost.Kind {
+			case augments.CostKindHP:
+				str += fmt.Sprintf("%d HP", av.Augments[i].Cost.Value)
+			}
+			geom = ebiten.GeoM{}
+			geom.Translate(
+				float64(x)+float64(augmentDescriptionCardOffset)+4,
+				float64(y)+216,
+			)
+			text.DrawWithOptions(screen, str, assets.CardBodyTextFontFace, &ebiten.DrawImageOptions{
+				GeoM: geom,
+			})
+		}
 		// Highlight selection
 		if i == av.SelectedIndex {
 			graphics.DrawRectBorder(

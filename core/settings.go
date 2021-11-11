@@ -17,28 +17,28 @@ const (
 )
 
 type baseSettings struct {
-	Action           Action
-	HpToGameOver     int
-	MaxBlocksSpawn   int
-	LinesDebug       bool
-	CameraPosition   []float32
-	SpawnInterval    uint64
-	Circular         bool
-	PlayerSpeed      float64
-	AugmentsInterval uint64
+	Action                Action
+	HpToGameOver          int
+	MaxBlocksSpawn        int
+	LinesDebug            bool
+	CameraPosition        []float32
+	SpawnInterval         uint64
+	Circular              bool
+	PlayerSpeed           float64
+	AugmentsScoreInterval uint64
 }
 
 func newBaseSettings() *baseSettings {
 	return &baseSettings{
-		Action:           ActionNone,
-		HpToGameOver:     0,
-		MaxBlocksSpawn:   3,
-		LinesDebug:       false,
-		CameraPosition:   []float32{0, 0, -1.25},
-		SpawnInterval:    logic.TPS * 3,
-		Circular:         false,
-		PlayerSpeed:      0.01,
-		AugmentsInterval: logic.TPS * 3,
+		Action:                ActionNone,
+		HpToGameOver:          0,
+		MaxBlocksSpawn:        3,
+		LinesDebug:            false,
+		CameraPosition:        []float32{0, 0, -1.25},
+		SpawnInterval:         logic.TPS * 3,
+		Circular:              false,
+		PlayerSpeed:           0.01,
+		AugmentsScoreInterval: 2000,
 	}
 }
 

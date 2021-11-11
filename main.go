@@ -63,11 +63,13 @@ func New() *Game {
 }
 
 func (g *Game) Update() error {
+	g.needsRedraw = false
 	// Handle game reset first
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		rand.Seed(time.Now().UnixNano())
 		g.level = core.NewLevel()
 		g.pauseView.Reset()
+		g.augmentView.Reset()
 	}
 	// Gameover view having checked for a restart
 	g.gameOverView.Update(g.level.GetPlayerHP(), g.level.Settings.HpToGameOver)
@@ -79,8 +81,23 @@ func (g *Game) Update() error {
 	if g.pauseView.Active() {
 		return nil
 	}
-	// Augments management
-
+	// Augments management => if eligible for an augment, show view
+	if g.level.GetScore()%g.level.Settings.AugmentsScoreInterval == 0 {
+		// If needs an augment selection but the view is not active yet, roll, activate and abort
+		if !g.augmentView.Active() {
+			rolls := g.augmentManager.RollAugments()
+			g.augmentView.SetAugments(rolls)
+			return nil
+		}
+		// Update and check for user input, if an augment is picked, the view isn't active anymore
+		g.augmentView.Update()
+		if g.augmentView.Active() {
+			// Abort because there's still an augment to pick
+			return nil
+		}
+		// If the view is not active anymore, check for selection
+		g.augmentManager.AddAugment(g.augmentView.Augments[g.augmentView.SelectedIndex])
+	}
 	// Require a draw
 	g.needsRedraw = true
 	// Reset cache
@@ -165,16 +182,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.pauseView.Draw(screen)
 		return
 	}
+	// Augment view
+	if g.augmentView.Active() {
+		g.augmentView.Draw(screen)
+		return
+	}
 
 	// Debug
 	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("TPS %.2f - FPS %.2f - BlockCount %d - Score %d - Speed %.2f - HP %d",
+		fmt.Sprintf("TPS %.2f - FPS %.2f - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
 			ebiten.CurrentTPS(),
 			ebiten.CurrentFPS(),
 			len(g.level.Blocks),
 			g.level.GetScore(),
 			g.level.GetSpeed(),
 			g.level.GetPlayerHP(),
+			g.level.Distance,
 		),
 	)
 }

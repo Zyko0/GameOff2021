@@ -292,7 +292,6 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	}
 
 	clr = mix(clr, bgColor, 1.0-exp(-0.0002 * d * d * d)) // Fog
-  	// clr = pow(clr, vec3(1.0/2.2)) // Gamma correction // TODO: no need, makes it worse
 	
 	return vec4(clr, 1.)
 }

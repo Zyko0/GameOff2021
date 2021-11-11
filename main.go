@@ -10,6 +10,7 @@ import (
 	"github.com/Zyko0/GameOff2021/graphics"
 	"github.com/Zyko0/GameOff2021/logic"
 	"github.com/Zyko0/GameOff2021/shaders"
+	"github.com/Zyko0/GameOff2021/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -28,7 +29,13 @@ func init() {
 type Game struct {
 	paused bool
 
-	level *core.Level
+	pauseView    *ui.PauseView
+	gameOverView *ui.GameoverView
+	augmentView  *ui.AugmentView
+	hud          *ui.HUD
+
+	level          *core.Level
+	augmentManager *core.AugmentManager
 
 	offscreen *ebiten.Image
 	cache     *graphics.Cache
@@ -37,11 +44,18 @@ type Game struct {
 }
 
 func New() *Game {
+	level := core.NewLevel()
 	return &Game{
 		paused:      false,
 		needsRedraw: false,
 
-		level: core.NewLevel(),
+		pauseView:    ui.NewPauseView(),
+		gameOverView: ui.NewGameoverView(),
+		augmentView:  ui.NewAugmentView(),
+		hud:          ui.NewHUD(level.GetPlayerHP(), nil),
+
+		level:          level,
+		augmentManager: core.NewAugmentManager(),
 
 		offscreen: ebiten.NewImage(logic.GameSquareDim, logic.GameSquareDim),
 		cache:     graphics.NewCache(),
@@ -49,14 +63,26 @@ func New() *Game {
 }
 
 func (g *Game) Update() error {
-	g.needsRedraw = true
-	// Pause
-	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
-		g.paused = !g.paused
+	// Handle game reset first
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		rand.Seed(time.Now().UnixNano())
+		g.level = core.NewLevel()
+		g.pauseView.Reset()
 	}
-	if g.paused {
+	// Gameover view having checked for a restart
+	g.gameOverView.Update(g.level.GetPlayerHP(), g.level.Settings.HpToGameOver)
+	if g.gameOverView.Active() {
 		return nil
 	}
+	// Pause view
+	g.pauseView.Update()
+	if g.pauseView.Active() {
+		return nil
+	}
+	// Augments management
+
+	// Require a draw
+	g.needsRedraw = true
 	// Reset cache
 	g.cache.Reset()
 	// Reset player's moving intents
@@ -66,12 +92,6 @@ func (g *Game) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		// TODO: Don't forget to remove this
 		return errors.New("soft kill")
-	}
-	// Restart
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
-		// Reset to a new level for now
-		g.level = core.NewLevel()
-		rand.Seed(time.Now().UnixNano())
 	}
 	// Jump
 	// TODO:
@@ -108,14 +128,14 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	// Buffer intermediate draw
-	if !g.paused && g.needsRedraw { // Save gpu resources if game is paused
+	if g.needsRedraw { // Save gpu resources if game is paused
 		x, y, z := core.XYZToGraphics(g.level.Player.GetX(), g.level.Player.GetY(), g.level.Player.GetZ())
 		g.offscreen.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
 			Uniforms: map[string]interface{}{
 				"ScreenSize":     []float32{float32(logic.GameSquareDim), float32(logic.GameSquareDim)},
 				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
 				"PlayerRadius":   float32(g.level.Player.GetRadius()),
-				"Camera":         g.level.Settings.ActualSettings.CameraPosition,
+				"Camera":         g.level.Settings.CameraPosition,
 				"Distance":       float32(g.level.Distance),
 
 				"BlockCount":     float32(len(g.level.Blocks)),
@@ -133,8 +153,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw buffer to screen
 	screen.DrawImage(g.offscreen, &ebiten.DrawImageOptions{
 		GeoM:   geom,
-		Filter: ebiten.FilterLinear,
+		Filter: ebiten.FilterNearest,
 	})
+	// Gameover view
+	if g.gameOverView.Active() {
+		g.gameOverView.Draw(screen)
+		return
+	}
+	// Pause view
+	if g.pauseView.Active() {
+		g.pauseView.Draw(screen)
+		return
+	}
+
 	// Debug
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("TPS %.2f - FPS %.2f - BlockCount %d - Score %d - Speed %.2f - HP %d",
@@ -155,6 +186,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func main() {
 	ebiten.SetMaxTPS(logic.TPS)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+	// TODO: set vsync on
+	// Note: setTimeout is called when FPSMoveVsyncOffMaximum which might create lag
+	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	ebiten.SetFullscreen(true)
 
 	if err := ebiten.RunGame(New()); err != nil {

@@ -17,52 +17,46 @@ const (
 )
 
 type baseSettings struct {
-	Action         Action
-	HpToGameOver   int
-	MaxBlocksSpawn int
-	LinesDebug     bool
-	CameraPosition []float32
-	SpawnInterval  uint64
-	Circular       bool
-	PlayerSpeed    float64
+	Action           Action
+	HpToGameOver     int
+	MaxBlocksSpawn   int
+	LinesDebug       bool
+	CameraPosition   []float32
+	SpawnInterval    uint64
+	Circular         bool
+	PlayerSpeed      float64
+	AugmentsInterval uint64
 }
 
 func newBaseSettings() *baseSettings {
 	return &baseSettings{
-		Action:         ActionNone,
-		HpToGameOver:   0,
-		MaxBlocksSpawn: 3,
-		LinesDebug:     false,
-		CameraPosition: []float32{0, 0, -1.25},
-		SpawnInterval:  logic.TPS * 3,
-		Circular:       false,
-		PlayerSpeed:    0.01,
+		Action:           ActionNone,
+		HpToGameOver:     0,
+		MaxBlocksSpawn:   3,
+		LinesDebug:       false,
+		CameraPosition:   []float32{0, 0, -1.25},
+		SpawnInterval:    logic.TPS * 3,
+		Circular:         false,
+		PlayerSpeed:      0.01,
+		AugmentsInterval: logic.TPS * 3,
 	}
 }
 
 type Settings struct {
-	BaseSettings   *baseSettings
-	ActualSettings *baseSettings
+	*baseSettings
 
-	Augments []*augments.Augment
+	defaultSettings *baseSettings
 }
 
 func newSettings() *Settings {
 	return &Settings{
-		BaseSettings:   newBaseSettings(),
-		ActualSettings: newBaseSettings(),
-
-		Augments: make([]*augments.Augment, 0),
+		baseSettings:    newBaseSettings(),
+		defaultSettings: newBaseSettings(),
 	}
 }
 
-func (s *Settings) AddAugment(a *augments.Augment) {
-	s.Augments = append(s.Augments, a)
-	s.applyAugments()
-}
-
-func (s *Settings) applyAugments() {
-	for range s.Augments {
+func (s *Settings) ApplyAugments(augments []*augments.Augment) {
+	for range augments {
 
 	}
 }

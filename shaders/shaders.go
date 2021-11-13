@@ -13,9 +13,12 @@ package main
 
 const (
 	PlayerIndex = 0.
-	BlockIndex = 1.
-	RoadIndex = 2.
-	PlaneIndex = 3.
+	RoadIndex = 1.
+	PlaneIndex = 2.
+	BlockIndex = 4.
+	BlockHarderIndex = 5.
+	BlockHarder2Index = 6.
+	BlockHeartIndex = 7.
 	
 	MaxBlocks = 32.
 	MaxDepth = 30.
@@ -30,11 +33,15 @@ var Distance float
 var BlockCount float
 var BlockPositions [32]vec3
 var BlockSizes [32]vec2
+var BlockKinds [32]float
 
-var Palette0 [4]vec4
-var Palette1 [4]vec4
-var Palette2 [4]vec4
-var Palette3 [4]vec4
+// TODO: If this is too much uniform for a specific platform, can always hardcode these
+var PalettePlayer [4]vec4
+var PaletteBlock [4]vec4
+var PaletteRoad [4]vec4
+var PaletteBlockHarder [4]vec4
+var PaletteBlockHarder2 [4]vec4
+var PaletteHeart [4]vec4
 
 func hash(p vec2) float { 
 	return fract(sin(dot(p, vec2(12.9898, 4.1414))) * 43758.5453)
@@ -77,19 +84,31 @@ func colorize(p vec3, t, index float) vec3 {
 		c := cos(PlayerPosition.x*8.)
 		mx := mat2(c, -s, s, c)
 		t = noise(p.xy*mx*scale)
-		pal = Palette0
+		pal = PalettePlayer
 	} else if index == BlockIndex {
 		t = noise(p.xy*8.)
-		pal = Palette1
+		pal = PaletteBlock
 	} else if index == RoadIndex {
 		p.z -= Distance
 		t = noise(p.xz*2.)
 		t *= (1+noise(p.xz*4.))
 		t *= (1+noise(p.xz*6.))
-		pal = Palette2
+		pal = PaletteRoad
 	} else if index == PlaneIndex {
 		// TODO: make the plane more fancy maybe ?
 		return vec3(0., 0., 0.247)
+	} else if index == BlockHarderIndex {
+		t = noise(p.xy*8.)
+		pal = PaletteBlockHarder
+	} else if index == BlockHarder2Index {
+		t = noise(p.xy*8.)
+		pal = PaletteBlockHarder2
+	} else if index == BlockHeartIndex {
+		p = normalize(p)
+		y := -p.y-abs(p.x)
+		t = abs(sqrt(p.x*p.x+y*y) - 0.05)
+		// t = noise(p.xy*64.) // length(p.xy)-0.1 // noise(p.xy*8./5.)
+		pal = PaletteHeart
 	}
 	
 	return palette(t, pal[0], pal[1], pal[2], pal[3])
@@ -102,20 +121,6 @@ func translate(p, offset vec3) vec3 {
 func sdSphere(p vec3, r float, offset vec3, index float) mat3 {
 	p = translate(p, offset)
 	d := length(p) - r
-
-	return mat3(
-		vec3(d, index, 0.),
-		offset,
-		vec3(0.),
-	)
-}
-
-func sdRoundBox(p, b, offset vec3, index float) mat3 {
-	const r = 0.075
-
-	p = translate(p, offset)
-	q := abs(p) - b
-  	d := length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0) - r
 
 	return mat3(
 		vec3(d, index, 0.),
@@ -147,6 +152,44 @@ func sdPlane(p, n vec3, h float, index float) mat3 {
 	)
 }
 
+func sdHeart(p, b, offset vec3, index float) mat3 {
+	p = translate(p, offset)
+
+	x := p.x
+	y := -p.y-abs(p.x)
+	z := p.z
+	d := sqrt(x*x+y*y+z*z) - b.x
+
+	return mat3(
+		vec3(d, index, 0.),
+		offset,
+		vec3(0.),
+	)
+}
+
+func sdBlock(p vec3, i float) mat3 {
+	bi := int(i)
+
+	bs := BlockSizes[bi]
+	blockOffset := vec3(0., 0.999, 0.)
+	blockOffset = translate(blockOffset, BlockPositions[bi])
+
+	kind := BlockKinds[bi]
+	if kind == BlockIndex {
+		return sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex)
+	} else if kind == BlockHarderIndex {
+		// TODO: shape must be different
+		return sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarderIndex)
+	} else if kind == BlockHarder2Index {
+		// TODO: shape must be different here too
+		return sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarder2Index)
+	} else if kind == BlockHeartIndex {
+		return sdHeart(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHeartIndex)
+	}
+
+	return mat3(0.)
+}
+
 func minWithData(obj1, obj2 mat3) mat3 {
 	if obj2[0].x < obj1[0].x {
 		return obj2
@@ -169,7 +212,7 @@ func sdScene(p vec3) mat3 {
 	roadOffset := vec3(0., 1.+roadh-0.001, -1.)
 	road := sdBox(p, vec3(roadw, roadh, roadl), roadOffset, RoadIndex)
 
-	sphereOffset := vec3(0., 1., 0.)
+	sphereOffset := vec3(0., 0.999, 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)
 	// * 2 radius is a hack to make sense with software value
 	spherePlayer := sdSphere(p, PlayerRadius*2., sphereOffset, PlayerIndex)
@@ -179,10 +222,7 @@ func sdScene(p vec3) mat3 {
 		if i >= BlockCount {
 			break
 		}
-		bs := BlockSizes[int(i)]
-		blockOffset := vec3(0., 1, 0.)
-		blockOffset = translate(blockOffset, BlockPositions[int(i)])
-		block := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex) // TODO: sdRoundBox
+		block := sdBlock(p, i)
 		scene = minWithData(scene, block)
 	}
 	
@@ -222,7 +262,7 @@ func calcNormal(p vec3) vec3 {
 
 func phong(lightDir, normal, rd, clr vec3) vec3 {
 	// ambient
-	ambient := vec3(0.01)
+	ambient := clr * 0.5
   
 	// diffuse
 	dotLN := clamp(dot(lightDir, normal), 0., 1.)
@@ -275,7 +315,7 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	if (d > MaxDepth) {
 		clr = bgColor // ray didn't hit anything
 	} else {
-		p := ro + rd * d    	
+		p := ro + rd * d
 
 		clr = colorFromObj(p, obj)
 

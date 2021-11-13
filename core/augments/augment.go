@@ -16,6 +16,7 @@ const (
 	IDDebugLines
 	IDActionJump
 	IDActionDash
+	IDFreeRoll
 	// Epic
 	IDNextFreeCost
 	IDHighSpawn
@@ -41,6 +42,7 @@ const (
 	IDLessAugments
 	IDHarderBlocks
 	IDHarderBlocks2
+	IDNoRegularBlocks
 	// TODO: Drunk ? Offseted block positions ?
 
 	IDMax

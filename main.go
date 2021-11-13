@@ -36,7 +36,7 @@ type Game struct {
 	augmentView  *ui.AugmentView
 	hud          *ui.HUD
 
-	level          *core.Level
+	core           *core.Core
 	augmentManager *core.AugmentManager
 
 	offscreen *ebiten.Image
@@ -46,7 +46,7 @@ type Game struct {
 }
 
 func New() *Game {
-	level := core.NewLevel()
+	level := core.NewCore()
 	return &Game{
 		paused:      false,
 		needsRedraw: false,
@@ -56,7 +56,7 @@ func New() *Game {
 		augmentView:  ui.NewAugmentView(),
 		hud:          ui.NewHUD(level.PlayerHP, nil),
 
-		level:          level,
+		core:           level,
 		augmentManager: core.NewAugmentManager(),
 
 		offscreen: ebiten.NewImage(logic.GameSquareDim, logic.GameSquareDim),
@@ -69,14 +69,14 @@ func (g *Game) Update() error {
 	// Handle game reset first
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		rand.Seed(time.Now().UnixNano())
-		g.level = core.NewLevel()
+		g.core = core.NewCore()
 		g.pauseView.Reset()
 		g.augmentView.Reset()
 		// TODO: Not sure we want to rewind this audio player is a spam "R" is going on
 		assets.ReplayInGameMusic()
 	}
 	// Gameover view having checked for a restart
-	g.gameOverView.Update(g.level.PlayerHP, g.level.Settings.HpToGameOver)
+	g.gameOverView.Update(g.core.PlayerHP, g.core.Settings.HpToGameOver)
 	if g.gameOverView.Active() {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (g *Game) Update() error {
 	}
 	// Augments management => if eligible for an augment, show view
 	// TODO: first at 1000 ?
-	if g.level.GetTicks()%g.level.Settings.AugmentsTicksInterval == 0 {
+	if g.core.GetTicks()%g.core.Settings.AugmentsTicksInterval == 0 {
 		// If needs an augment selection but the view is not active yet, roll, activate and abort
 		if !g.augmentView.Active() {
 			rolls := g.augmentManager.RollAugments()
@@ -103,9 +103,9 @@ func (g *Game) Update() error {
 		// If the view is not active anymore, check for selection
 		a := g.augmentView.Augments[g.augmentView.SelectedIndex]
 		g.augmentManager.AddAugment(a)
-		g.level.Settings.ApplyAugments(g.augmentManager.CurrentAugments)
+		g.core.Settings.ApplyAugments(g.augmentManager.CurrentAugments)
 		if a.Cost.Kind == augments.CostKindHP {
-			g.level.PlayerHP -= a.Cost.Value
+			g.core.PlayerHP -= a.Cost.Value
 		}
 	}
 	// Require a draw
@@ -113,8 +113,8 @@ func (g *Game) Update() error {
 	// Reset cache
 	g.cache.Reset()
 	// Reset player's moving intents
-	g.level.Player.SetIntentX(0)
-	g.level.Player.SetIntentAction(false)
+	g.core.Player.SetIntentX(0)
+	g.core.Player.SetIntentAction(false)
 	// Quit
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		// TODO: Don't forget to remove this
@@ -123,31 +123,32 @@ func (g *Game) Update() error {
 	// Jump
 	// TODO:
 	if kpd := inpututil.KeyPressDuration(ebiten.KeySpace); kpd > 0 {
-		g.level.Player.SetIntentAction(true)
+		g.core.Player.SetIntentAction(true)
 	}
 	// Move player right
 	if kpd := inpututil.KeyPressDuration(ebiten.KeyRight); kpd > 0 {
-		g.level.Player.SetIntentX(1)
+		g.core.Player.SetIntentX(1)
 	}
 	// Move player left
 	if kpd := inpututil.KeyPressDuration(ebiten.KeyLeft); kpd > 0 {
-		g.level.Player.SetIntentX(-1)
+		g.core.Player.SetIntentX(-1)
 	}
 	// Game update
-	g.level.Update()
+	g.core.Update()
 	assets.ResumeInGameMusic()
 	// Set graphic data
-	g.cache.BlockCount = len(g.level.Blocks)
-	for i, b := range g.level.Blocks {
+	g.cache.BlockCount = len(g.core.Blocks)
+	for i, b := range g.core.Blocks {
 		x, y, z := core.XYZToGraphics(b.GetX(), b.GetY(), b.GetZ())
 		g.cache.BlockPositions[i*3+0] = float32(x)
 		g.cache.BlockPositions[i*3+1] = float32(y)
 		g.cache.BlockPositions[i*3+2] = float32(z)
 		g.cache.BlockSizes[i*2+0] = float32(b.GetWidth())
 		g.cache.BlockSizes[i*2+1] = float32(b.GetHeight())
+		g.cache.BlockKinds[i] = float32(b.GetKind())
 	}
 	// Update HUD
-	g.hud.Update(g.level.PlayerHP, g.augmentManager.CurrentAugments)
+	g.hud.Update(g.core.PlayerHP, g.augmentManager.CurrentAugments)
 
 	return nil
 }
@@ -155,22 +156,26 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	// Offscreen intermediate draw
 	if g.needsRedraw { // Save gpu resources if game is paused
-		x, y, z := core.XYZToGraphics(g.level.Player.GetX(), g.level.Player.GetY(), g.level.Player.GetZ())
+		x, y, z := core.XYZToGraphics(g.core.Player.GetX(), g.core.Player.GetY(), g.core.Player.GetZ())
 		g.offscreen.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
 			Uniforms: map[string]interface{}{
 				"ScreenSize":     []float32{float32(logic.GameSquareDim), float32(logic.GameSquareDim)},
 				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
-				"PlayerRadius":   float32(g.level.Player.GetRadius()),
-				"Camera":         g.level.Settings.CameraPosition,
-				"Distance":       float32(g.level.Distance),
+				"PlayerRadius":   float32(g.core.Player.GetRadius()),
+				"Camera":         g.core.Settings.CameraPosition,
+				"Distance":       float32(g.core.Distance),
 
-				"BlockCount":     float32(len(g.level.Blocks)),
+				"BlockCount":     float32(len(g.core.Blocks)),
 				"BlockPositions": g.cache.BlockPositions,
 				"BlockSizes":     g.cache.BlockSizes,
+				"BlockKinds":     g.cache.BlockKinds,
 
-				"Palette0": graphics.PlayerPalette,
-				"Palette1": graphics.BlockPalette,
-				"Palette2": graphics.RoadPalette,
+				"PalettePlayer":       graphics.PalettePlayer,
+				"PaletteBlock":        graphics.PaletteBlock,
+				"PaletteRoad":         graphics.PaletteRoad,
+				"PaletteBlockHarder":  graphics.PaletteBlockHarder,
+				"PaletteBlockHarder2": graphics.PaletteBlockHarder2,
+				"PaletteHeart":        graphics.PaletteHeart,
 			},
 		})
 		// Draw HUD on offscreen
@@ -203,12 +208,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		fmt.Sprintf("TPS %.2f - FPS %.2f - Tick %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
 			ebiten.CurrentTPS(),
 			ebiten.CurrentFPS(),
-			g.level.GetTicks(),
-			len(g.level.Blocks),
-			g.level.GetScore(),
-			g.level.GetSpeed(),
-			g.level.PlayerHP,
-			g.level.Distance,
+			g.core.GetTicks(),
+			len(g.core.Blocks),
+			g.core.GetScore(),
+			g.core.GetSpeed(),
+			g.core.PlayerHP,
+			g.core.Distance,
 		),
 	)
 }

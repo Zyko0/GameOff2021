@@ -9,23 +9,28 @@ const (
 
 	BlockPosY0 = 0.
 	BlockPosY1 = 0.4
+)
 
-	// TODO: this kinds do not need to be strings anymore
-	BlockKindRegular = "block"
-	BlockKindHarder  = "block_hard"
-	BlockKindHardest = "block_hardest"
-	BlockKindHeart   = "block_heart"
+type BlockKind float32
+
+const (
+	BlockKindRegular BlockKind = 4
+	BlockKindHarder  BlockKind = 5
+	BlockKindHarder2 BlockKind = 6
+	BlockKindHeart   BlockKind = 7
 )
 
 type Block struct {
 	x, y, z float64
+	kind    BlockKind
 }
 
-func newBlock(x, y, z, width, height, speed float64, kind string) *Block {
+func newBlock(x, y, z, width, height float64, kind BlockKind) *Block {
 	return &Block{
-		x: x + width/2,
-		y: height / 2,
-		z: z,
+		x:    x + width/2,
+		y:    height / 2,
+		z:    z,
+		kind: kind,
 	}
 }
 
@@ -47,4 +52,8 @@ func (b *Block) GetWidth() float64 {
 
 func (b *Block) GetHeight() float64 {
 	return BlockHeight0
+}
+
+func (b *Block) GetKind() BlockKind {
+	return b.kind
 }

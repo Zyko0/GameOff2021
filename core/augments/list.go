@@ -10,6 +10,7 @@ func init() {
 	List[IDDebugLines] = AugmentDebugLines
 	List[IDActionJump] = AugmentActionJump
 	List[IDActionDash] = AugmentActionDash
+	List[IDFreeRoll] = AugmentFreeRoll
 
 	List[IDNextFreeCost] = AugmentNextFreeCost
 	List[IDHighSpawn] = AugmentHighSpawn
@@ -35,6 +36,7 @@ func init() {
 	List[IDLessAugments] = AugmentLessAugments
 	List[IDHarderBlocks] = AugmentHarderBlocks
 	List[IDHarderBlocks2] = AugmentHarderBlocks2
+	List[IDNoRegularBlocks] = AugmentNoRegularBlocks
 
 	// Reprocess description texts for them to fit in card caption
 	for _, a := range List {
@@ -111,6 +113,17 @@ var (
 		Name:        "Dash",
 		Description: "Your space button now lets you dash in your last inputted direction.",
 		Stackable:   false,
+		Rarity:      RarityCommon,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
+	AugmentFreeRoll = &Augment{
+		ID:          IDFreeRoll,
+		Name:        "Infinite Loop",
+		Description: "Triggers a new roll.",
+		Stackable:   true,
 		Rarity:      RarityCommon,
 		Cost: Cost{
 			Kind:  CostNone,
@@ -379,6 +392,20 @@ var (
 		ID:          IDHarderBlocks2,
 		Name:        "Harder Blocks II",
 		Description: "Some blocks deal even more damage, you should also recognize them.",
+		Stackable:   false,
+		Rarity:      RarityNegative,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+		Constraints: []ID{
+			IDHarderBlocks,
+		},
+	}
+	AugmentNoRegularBlocks = &Augment{
+		ID:          IDHarderBlocks2,
+		Name:        "No Regular Blocks",
+		Description: "The block you used to know doesn't exist anymore",
 		Stackable:   false,
 		Rarity:      RarityNegative,
 		Cost: Cost{

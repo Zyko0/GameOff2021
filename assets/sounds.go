@@ -26,6 +26,9 @@ var (
 	//go:embed sound/hit.wav
 	hitSoundBytes  []byte
 	hitAudioPlayer *audio.Player
+	//go:embed sound/heart.wav
+	heartSoundBytes  []byte
+	heartAudioPlayer *audio.Player
 )
 
 func init() {
@@ -40,6 +43,16 @@ func init() {
 		log.Fatal(err)
 	}
 	hitAudioPlayer.SetVolume(defaultSFXVolume)
+
+	reader, err = wav.Decode(ctx, bytes.NewReader(heartSoundBytes))
+	if err != nil {
+		log.Fatal(err)
+	}
+	heartAudioPlayer, err = ctx.NewPlayer(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	heartAudioPlayer.SetVolume(defaultSFXVolume)
 
 	reader, err = wav.Decode(ctx, bytes.NewReader(ingameMusicBytes))
 	if err != nil {
@@ -99,4 +112,9 @@ func StopMainmenuMusic() {
 func PlayHitSound() {
 	hitAudioPlayer.Rewind()
 	hitAudioPlayer.Play()
+}
+
+func PlayHeartSound() {
+	heartAudioPlayer.Rewind()
+	heartAudioPlayer.Play()
 }

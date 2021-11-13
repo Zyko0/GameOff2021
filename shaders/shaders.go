@@ -82,8 +82,7 @@ func colorize(p vec3, t, index float) vec3 {
 		// X Rotation
 		s := sin(PlayerPosition.x*8.)
 		c := cos(PlayerPosition.x*8.)
-		mx := mat2(c, -s, s, c)
-		t = noise(p.xy*mx*scale)
+		t = noise(p.xy*mat2(c, -s, s, c)*scale)
 		pal = PalettePlayer
 	} else if index == BlockIndex {
 		t = noise(p.xy*8.)

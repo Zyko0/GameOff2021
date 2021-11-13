@@ -121,7 +121,12 @@ func (l *Core) Update() {
 		if l.invulnTime <= 0 {
 			// Check z intersection
 			if collides, tdz := internal.DepthCollisionPlayerBlock(l.Player, b, dz); collides {
-				assets.PlayHitSound()
+				switch b.kind {
+				case BlockKindHeart:
+					assets.PlayHeartSound()
+				default:
+					assets.PlayHitSound()
+				}
 				l.PlayerHP--
 				l.invulnTime = InvulnTime
 				// If we know the player is dead, let's adjust the distance of all blocks

@@ -6,7 +6,6 @@ import (
 	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/core/internal"
 	"github.com/Zyko0/GameOff2021/logic"
-	"github.com/solarlune/resolv"
 )
 
 const (
@@ -26,9 +25,6 @@ type Level struct {
 	invulnTime int
 	score      uint64
 
-	hSpace     *resolv.Space
-	depthSpace *resolv.Space
-
 	PlayerHP int
 	Speed    float64
 	Distance float64
@@ -44,9 +40,6 @@ func NewLevel() *Level {
 		invulnTime: 0,
 		score:      0,
 
-		hSpace:     internal.NewSpace(RoadWidth, RoadHeight),
-		depthSpace: internal.NewSpace(RoadDepth, RoadHeight),
-
 		PlayerHP: 3,
 		Speed:    DefaultSpeed,
 		Distance: 0,
@@ -54,8 +47,6 @@ func NewLevel() *Level {
 		Blocks:   []*Block{},
 		Settings: newSettings(),
 	}
-	level.hSpace.Add(level.Player.hCollider)
-	level.depthSpace.Add(level.Player.depthCollider)
 
 	return level
 }
@@ -98,53 +89,42 @@ func (l *Level) Update() {
 			}
 		}
 		l.Player.x += dx
-		l.Player.hCollider.X += (dx * internal.SpaceSizeRatio)
-		l.Player.hCollider.Update()
 	}
 	// Every spawninterval ticks, spawn some
 	if l.tick%l.Settings.SpawnInterval == 0 {
 		blocks := spawnBlocks(l.Speed*BlockDefaultSpeed, l.Settings.SpawnDepth, l.Settings.MaxBlocksSpawn)
-		for _, b := range blocks {
-			l.hSpace.Add(b.hCollider)
-			l.depthSpace.Add(b.depthCollider)
-			l.Blocks = append(l.Blocks, b)
-		}
+		l.Blocks = append(l.Blocks, blocks...)
 	}
 	// If in an invulnerability frame, decrement it
 	if l.invulnTime > 0 {
 		l.invulnTime--
 	}
-	// Update all blocks
+	// Check collisions for blocks
+	dz := -(l.Speed * BlockDefaultSpeed)
 	for _, b := range l.Blocks {
-		dw := -(l.Speed * BlockDefaultSpeed) * internal.SpaceSizeRatio
 		// If there's a depth hit and not in an invulnerability frame, check for damage loss
 		if l.invulnTime <= 0 {
 			// Check z intersection
-			if depthHit := b.depthCollider.Shape.Intersection(dw, 0, l.Player.depthCollider.Shape); depthHit != nil {
-				// Check x intersection with the same object
-				for _, oh := range l.hSpace.Objects() {
-					if oh.Data != b.depthCollider.Data {
-						continue
-					}
-					if oh.Shape.Intersection(0, 0, l.Player.hCollider.Shape) != nil {
-						assets.PlayHitSound()
-						l.PlayerHP--
-						l.invulnTime = InvulnTime
-					}
+			if collides, tdz := internal.DepthCollisionPlayerBlock(l.Player, b, dz); collides {
+				assets.PlayHitSound()
+				l.PlayerHP--
+				l.invulnTime = InvulnTime
+				// If we know the player is dead, let's adjust the distance of all blocks
+				if l.PlayerHP <= l.Settings.defaultSettings.HpToGameOver {
+					dz = tdz
 				}
+				break
 			}
 		}
-		b.z += (dw / internal.SpaceSizeRatio)
-		// Depth space update
-		b.depthCollider.X += dw
-		b.depthCollider.Update()
+	}
+	// Update blocks
+	for _, b := range l.Blocks {
+		b.z += dz
 	}
 	// Remove any blocks that have fallen off the screen
 	for i := 0; i < len(l.Blocks); i++ {
 		b := l.Blocks[i]
 		if b.z < 2. {
-			l.hSpace.Remove(b.hCollider)
-			l.depthSpace.Remove(b.depthCollider)
 			l.Blocks[i] = l.Blocks[len(l.Blocks)-1]
 			l.Blocks = l.Blocks[:len(l.Blocks)-1]
 			i--
@@ -155,7 +135,7 @@ func (l *Level) Update() {
 	l.Distance += (l.Speed * BlockDefaultSpeed)
 	// Every 15 second, increase global speed
 	if l.tick%(logic.TPS*15) == 0 {
-		l.Speed += 0.25
+		l.Speed += 8.25
 	}
 }
 

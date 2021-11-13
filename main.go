@@ -72,6 +72,7 @@ func (g *Game) Update() error {
 		g.level = core.NewLevel()
 		g.pauseView.Reset()
 		g.augmentView.Reset()
+		// TODO: Not sure we want to rewind this audio player is a spam "R" is going on
 		assets.ReplayInGameMusic()
 	}
 	// Gameover view having checked for a restart

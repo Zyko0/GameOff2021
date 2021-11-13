@@ -106,7 +106,7 @@ func colorize(p vec3, t, index float) vec3 {
 	} else if index == BlockHeartIndex {
 		p = normalize(p)
 		y := -p.y-abs(p.x)
-		t = abs(sqrt(p.x*p.x+y*y) - 0.05)
+		t = abs(sqrt(p.x*p.x+y*y) - 1.0)
 		// t = noise(p.xy*64.) // length(p.xy)-0.1 // noise(p.xy*8./5.)
 		pal = PaletteHeart
 	}

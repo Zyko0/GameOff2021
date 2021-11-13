@@ -89,7 +89,7 @@ func colorize(p vec3, t, index float) vec3 {
 		pal = Palette2
 	} else if index == PlaneIndex {
 		// TODO: make the plane more fancy maybe ?
-		return vec3(1., 0., 0.)
+		return vec3(0., 0., 0.247)
 	}
 	
 	return palette(t, pal[0], pal[1], pal[2], pal[3])
@@ -222,15 +222,15 @@ func calcNormal(p vec3) vec3 {
 
 func phong(lightDir, normal, rd, clr vec3) vec3 {
 	// ambient
-	ambient := vec3(0.2)
+	ambient := vec3(0.01)
   
 	// diffuse
 	dotLN := clamp(dot(lightDir, normal), 0., 1.)
 	diffuse := clr * dotLN
   
 	// specular
-	dotRV := clamp(dot(reflect(lightDir, normal), -rd), 0., 1.)
-	specular := vec3(0., 0., 0.2) * pow(dotRV, 1.0)
+	halfwayDir := normalize(lightDir + normal)
+    specular := vec3(0.25)*pow(max(dot(normal, halfwayDir), 0.0), 16.0)
   
 	return ambient + diffuse + specular
 }
@@ -256,7 +256,7 @@ func softShadow(ro, rd vec3, mint, tmax float) float {
 }
 
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
-	bgColor := vec3(0.1, 0.1, 0.1)
+	bgColor := vec3(0.01, 0.01, 0.01)
 	uv := (position.xy / ScreenSize) * 2. - 1.
 
 	// Early abort if at top part of screen

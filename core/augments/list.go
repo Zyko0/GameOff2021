@@ -10,14 +10,18 @@ func init() {
 	List[IDDebugLines] = AugmentDebugLines
 	List[IDActionJump] = AugmentActionJump
 	List[IDActionDash] = AugmentActionDash
+
+	List[IDNextFreeCost] = AugmentNextFreeCost
 	List[IDHighSpawn] = AugmentHighSpawn
 	List[IDHeartSpawn] = AugmentHeartSpawn
 	List[IDSlowMotion] = AugmentSlowMotion
 	List[IDHeartContainer] = AugmentHeartContainer
+
 	List[IDNegativeHearts] = AugmentNegativeHearts
 	List[IDCircular] = AugmentCircular
 	List[IDPerfectStep] = AugmentPerfectStep
 	List[IDRemoveLastNegative] = AugmentRemoveLastNegative
+
 	List[IDOneMoreBlock] = AugmentOneMoreBlock
 	List[IDTallerBlocks] = AugmentTallerBlocks
 	List[IDTopView] = AugmentTopView
@@ -117,6 +121,17 @@ var (
 
 var (
 	// Epic
+	AugmentNextFreeCost = &Augment{
+		ID:          IDNextFreeCost,
+		Name:        "Free cost",
+		Description: "The next exploited bug costs you nothing.",
+		Stackable:   true,
+		Rarity:      RarityEpic,
+		Cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
+		},
+	}
 	AugmentHighSpawn = &Augment{
 		ID:          IDHighSpawn,
 		Name:        "Weird gravity",

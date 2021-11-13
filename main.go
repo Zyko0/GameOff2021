@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/core"
 	"github.com/Zyko0/GameOff2021/core/augments"
 	"github.com/Zyko0/GameOff2021/graphics"
@@ -71,6 +72,7 @@ func (g *Game) Update() error {
 		g.level = core.NewLevel()
 		g.pauseView.Reset()
 		g.augmentView.Reset()
+		assets.ReplayInGameMusic()
 	}
 	// Gameover view having checked for a restart
 	g.gameOverView.Update(g.level.PlayerHP, g.level.Settings.HpToGameOver)
@@ -132,6 +134,7 @@ func (g *Game) Update() error {
 	}
 	// Game update
 	g.level.Update()
+	assets.ResumeInGameMusic()
 	// Set graphic data
 	g.cache.BlockCount = len(g.level.Blocks)
 	for i, b := range g.level.Blocks {

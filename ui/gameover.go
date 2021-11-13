@@ -62,6 +62,12 @@ func (gv *GameoverView) Active() bool {
 
 func (gv *GameoverView) Update(playerHP, hpToGameOver int) {
 	gv.active = playerHP <= hpToGameOver
+	if gv.active {
+		assets.StopInGameMusic()
+		assets.PlayMainmenuMusic()
+	} else {
+		assets.StopMainmenuMusic()
+	}
 }
 
 func (gv *GameoverView) Draw(screen *ebiten.Image) {

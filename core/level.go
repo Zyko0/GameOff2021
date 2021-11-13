@@ -3,6 +3,7 @@ package core
 import (
 	"math/rand"
 
+	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/core/internal"
 	"github.com/Zyko0/GameOff2021/logic"
 	"github.com/solarlune/resolv"
@@ -73,7 +74,7 @@ func spawnBlocks(speed, depth float64, maxSpawn int) []*Block {
 		indices[idx] = indices[len(indices)-1]
 		indices = indices[:len(indices)-1]
 
-		blocks[i] = newBlock(x, 0, depth, width, height, speed)
+		blocks[i] = newBlock(x, 0, depth, width, height, speed, BlockKindRegular)
 	}
 
 	return blocks
@@ -126,6 +127,7 @@ func (l *Level) Update() {
 						continue
 					}
 					if oh.Shape.Intersection(0, 0, l.Player.hCollider.Shape) != nil {
+						assets.PlayHitSound()
 						l.PlayerHP--
 						l.invulnTime = InvulnTime
 					}

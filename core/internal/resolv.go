@@ -8,13 +8,13 @@ const (
 	spaceCellSize = 1.
 )
 
-func NewBlockObject(x, y, w, h float64, id uint64) *resolv.Object {
+func NewBlockObject(x, y, w, h float64, id uint64, tag string) *resolv.Object {
 	w *= SpaceSizeRatio
 	h *= SpaceSizeRatio
 	x *= SpaceSizeRatio
 	y *= SpaceSizeRatio
 	obj := resolv.NewObject(
-		x, y, w, h, "block",
+		x, y, w, h, tag,
 	)
 	obj.SetShape(resolv.NewRectangle(0, 0, w, h))
 	obj.Data = id

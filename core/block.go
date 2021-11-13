@@ -14,6 +14,11 @@ const (
 
 	BlockPosY0 = 0.
 	BlockPosY1 = 0.4
+
+	BlockKindRegular = "block"
+	BlockKindHarder  = "block_hard"
+	BlockKindHardest = "block_hardest"
+	BlockKindHeart   = "block_heart"
 )
 
 type Block struct {
@@ -22,7 +27,7 @@ type Block struct {
 	depthCollider *resolv.Object
 }
 
-func newBlock(x, y, z, width, height, speed float64) *Block {
+func newBlock(x, y, z, width, height, speed float64, kind string) *Block {
 	id := internal.GetNextID()
 	return &Block{
 		x: x + width/2,
@@ -34,6 +39,7 @@ func newBlock(x, y, z, width, height, speed float64) *Block {
 			width,
 			height,
 			id,
+			kind,
 		),
 		depthCollider: internal.NewBlockObject(
 			z-width/2,
@@ -41,6 +47,7 @@ func newBlock(x, y, z, width, height, speed float64) *Block {
 			width,
 			height,
 			id,
+			kind,
 		),
 	}
 }

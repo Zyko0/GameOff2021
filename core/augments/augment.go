@@ -17,6 +17,7 @@ const (
 	IDActionJump
 	IDActionDash
 	// Epic
+	IDNextFreeCost
 	IDHighSpawn
 	IDHeartSpawn
 	IDSlowMotion

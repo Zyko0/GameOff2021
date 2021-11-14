@@ -1,42 +1,45 @@
-package core
+package augments
 
-import (
-	"math/rand"
+import "math/rand"
 
-	"github.com/Zyko0/GameOff2021/core/augments"
-)
+type Manager struct {
+	currentAugmentsByID []*Augment
 
-type AugmentManager struct {
-	currentAugmentsByID []*augments.Augment
+	possibleAugmentsCommon    []*Augment
+	possibleAugmentsEpic      []*Augment
+	possibleAugmentsLegendary []*Augment
+	possibleAugmentsNegative  []*Augment
 
-	possibleAugmentsCommon    []*augments.Augment
-	possibleAugmentsEpic      []*augments.Augment
-	possibleAugmentsLegendary []*augments.Augment
-	possibleAugmentsNegative  []*augments.Augment
-
-	CurrentAugments []*augments.Augment
+	CurrentAugments []*Augment
 }
 
-func NewAugmentManager() *AugmentManager {
-	return &AugmentManager{
-		currentAugmentsByID: make([]*augments.Augment, augments.IDMax),
+func NewManager() *Manager {
+	return &Manager{
+		currentAugmentsByID: make([]*Augment, IDMax),
 
-		possibleAugmentsCommon:    make([]*augments.Augment, 0, augments.IDMax),
-		possibleAugmentsEpic:      make([]*augments.Augment, 0, augments.IDMax),
-		possibleAugmentsLegendary: make([]*augments.Augment, 0, augments.IDMax),
-		possibleAugmentsNegative:  make([]*augments.Augment, 0, augments.IDMax),
+		possibleAugmentsCommon:    make([]*Augment, 0, IDMax),
+		possibleAugmentsEpic:      make([]*Augment, 0, IDMax),
+		possibleAugmentsLegendary: make([]*Augment, 0, IDMax),
+		possibleAugmentsNegative:  make([]*Augment, 0, IDMax),
 
-		CurrentAugments: []*augments.Augment{},
+		CurrentAugments: []*Augment{},
 	}
 }
 
-func (am *AugmentManager) generatePossibleAugments() {
+func (m *Manager) Reset() {
+	for i := range m.currentAugmentsByID {
+		m.currentAugmentsByID[i] = nil
+	}
+	m.CurrentAugments = m.CurrentAugments[:0]
+}
+
+func (am *Manager) generatePossibleAugments() {
 	am.possibleAugmentsCommon = am.possibleAugmentsCommon[:0]
 	am.possibleAugmentsEpic = am.possibleAugmentsEpic[:0]
 	am.possibleAugmentsLegendary = am.possibleAugmentsLegendary[:0]
 	am.possibleAugmentsNegative = am.possibleAugmentsNegative[:0]
 
-	for _, a := range augments.List {
+	for _, a := range List {
 		// Check constraints satisfaction
 		var possible = true
 		for _, id := range a.Constraints {
@@ -58,20 +61,20 @@ func (am *AugmentManager) generatePossibleAugments() {
 		}
 		// Add and order by rarity
 		switch a.Rarity {
-		case augments.RarityCommon:
+		case RarityCommon:
 			am.possibleAugmentsCommon = append(am.possibleAugmentsCommon, a)
-		case augments.RarityEpic:
+		case RarityEpic:
 			am.possibleAugmentsEpic = append(am.possibleAugmentsEpic, a)
-		case augments.RarityLegendary:
+		case RarityLegendary:
 			am.possibleAugmentsLegendary = append(am.possibleAugmentsLegendary, a)
-		case augments.RarityNegative:
+		case RarityNegative:
 			am.possibleAugmentsNegative = append(am.possibleAugmentsNegative, a)
 		}
 	}
 }
 
-func (am *AugmentManager) rollAugments(possible []*augments.Augment) []*augments.Augment {
-	rolls := make([]*augments.Augment, 0, 3)
+func (am *Manager) rollAugments(possible []*Augment) []*Augment {
+	rolls := make([]*Augment, 0, 3)
 	indices := make([]int, len(possible))
 	for i := range indices {
 		indices[i] = i
@@ -87,59 +90,70 @@ func (am *AugmentManager) rollAugments(possible []*augments.Augment) []*augments
 	return rolls
 }
 
-func (am *AugmentManager) RollAugments() []*augments.Augment {
+func (am *Manager) RollAugments() []*Augment {
 	am.generatePossibleAugments()
 
 	rarity := rand.Float64()
 	// Return negative rolls
-	if rarity < augments.NegativeRarityPercent {
+	if rarity < NegativeRarityPercent {
 		return am.rollAugments(am.possibleAugmentsNegative)
 	}
 	// Return positive rolls
 	rarity = rand.Float64()
 	switch {
-	case rarity < augments.LegendaryRarityPercent:
+	case rarity < LegendaryRarityPercent:
 		return am.rollAugments(am.possibleAugmentsLegendary)
-	case rarity < augments.EpicRarityPercent:
+	case rarity < EpicRarityPercent:
 		return am.rollAugments(am.possibleAugmentsEpic)
 	default:
 		return am.rollAugments(am.possibleAugmentsCommon)
 	}
 }
 
-func (am *AugmentManager) AddAugment(augment *augments.Augment) {
+func (am *Manager) AddAugment(augment *Augment) Cost {
+	cost := augment.cost
+	if negCostAugment := am.currentAugmentsByID[IDNegateNextCost]; negCostAugment != nil {
+		cost = Cost{
+			Kind: CostNone,
+		}
+		am.RemoveAugment(negCostAugment)
+	}
 	// Hard check for the removal of last negative augment
-	if augment.ID == augments.IDRemoveLastNegative {
-		var last *augments.Augment
-		for i := range am.CurrentAugments {
-			if am.CurrentAugments[i].Rarity == augments.RarityNegative {
+	if augment.ID == IDRemoveLastNegative {
+		var last *Augment
+		for i := len(am.CurrentAugments) - 1; i > 0; i-- {
+			if am.CurrentAugments[i].Rarity == RarityNegative {
 				last = am.CurrentAugments[i]
+				break
 			}
 		}
 		if last != nil {
 			am.RemoveAugment(last)
 		}
-		return
+		return cost
 	}
 	// Hard check for the removal of last positive augment
-	if augment.ID == augments.IDRemoveLastNegative {
-		var last *augments.Augment
-		for i := range am.CurrentAugments {
-			if am.CurrentAugments[i].Rarity != augments.RarityNegative {
+	if augment.ID == IDRemoveLastNegative {
+		var last *Augment
+		for i := len(am.CurrentAugments) - 1; i > 0; i-- {
+			if am.CurrentAugments[i].Rarity == RarityNegative {
 				last = am.CurrentAugments[i]
+				break
 			}
 		}
 		if last != nil {
 			am.RemoveAugment(last)
 		}
-		return
+		return cost
 	}
 	// Add augment
 	am.currentAugmentsByID[augment.ID] = augment
 	am.CurrentAugments = append(am.CurrentAugments, augment)
+
+	return cost
 }
 
-func (am *AugmentManager) RemoveAugment(augment *augments.Augment) {
+func (am *Manager) RemoveAugment(augment *Augment) {
 	am.currentAugmentsByID[augment.ID] = nil
 	for i, a := range am.CurrentAugments {
 		if a.ID == augment.ID {

@@ -204,11 +204,11 @@ func (av *AugmentView) Draw(screen *ebiten.Image) {
 			GeoM: geom,
 		})
 		// Cost
-		if av.Augments[i].Cost.Kind != augments.CostNone {
+		if cost := av.Augments[i].GetCost(); cost.Kind != augments.CostNone {
 			str := "Cost: "
-			switch av.Augments[i].Cost.Kind {
-			case augments.CostKindHP:
-				str += fmt.Sprintf("%d HP", av.Augments[i].Cost.Value)
+			switch cost.Kind {
+			case augments.CostHP:
+				str += fmt.Sprintf("%d HP", cost.Value)
 			}
 			geom = ebiten.GeoM{}
 			geom.Translate(

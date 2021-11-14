@@ -18,7 +18,7 @@ const (
 
 	BlockDefaultSpeed = 0.075
 
-	HeartChance = 1.0 // TODO: 0.05
+	HeartChance = 0.05
 )
 
 type Core struct {
@@ -86,51 +86,62 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 	return blocks
 }
 
-func (l *Core) Update() {
+func (c *Core) Update() {
 	// Update player on X axis
-	if l.Player.intentX != 0 {
+	if c.Player.intentX != 0 {
 		// TODO: don't forget about circular augments
-		dx := l.Player.intentX * l.Settings.PlayerSpeed
+		dx := c.Player.intentX * c.Settings.PlayerSpeed
 		// Check collisions with a wall
-		if diff := l.Player.x + dx - l.Player.radius; diff < 0 {
+		if diff := c.Player.x + dx - c.Player.radius; diff < 0 {
 			dx -= diff
-			if l.Settings.Circular {
-				dx = (1 - l.Player.radius) - l.Player.x
+			if c.Settings.Circular {
+				dx = (1 - c.Player.radius) - c.Player.x
 			}
-		} else if diff := l.Player.x + dx + l.Player.radius; diff > 1 {
+		} else if diff := c.Player.x + dx + c.Player.radius; diff > 1 {
 			dx -= (diff - 1)
-			if l.Settings.Circular {
-				dx = -l.Player.x + l.Player.radius
+			if c.Settings.Circular {
+				dx = -c.Player.x + c.Player.radius
 			}
 		}
-		l.Player.x += dx
+		c.Player.x += dx
 	}
 	// Every spawninterval ticks, spawn some blocks
-	if l.tick%l.Settings.BlockSettings.SpawnInterval == 0 {
-		blocks := spawnBlocks(&l.Settings.BlockSettings)
-		l.Blocks = append(l.Blocks, blocks...)
+	if c.tick%c.Settings.BlockSettings.SpawnInterval == 0 {
+		blocks := spawnBlocks(&c.Settings.BlockSettings)
+		c.Blocks = append(c.Blocks, blocks...)
 	}
 	// If in an invulnerability frame, decrement it
-	if l.invulnTime > 0 {
-		l.invulnTime--
+	if c.invulnTime > 0 {
+		c.invulnTime--
 	}
 	// Check collisions for blocks
-	dz := -(l.Speed * BlockDefaultSpeed)
-	for _, b := range l.Blocks {
+	dz := -(c.Speed * BlockDefaultSpeed)
+	for _, b := range c.Blocks {
 		// If there's a depth hit and not in an invulnerability frame, check for damage loss
-		if l.invulnTime <= 0 {
+		if c.invulnTime <= 0 {
 			// Check z intersection
-			if collides, tdz := internal.DepthCollisionPlayerBlock(l.Player, b, dz); collides {
+			if collides, tdz := internal.DepthCollisionPlayerBlock(c.Player, b, dz); collides {
 				switch b.kind {
 				case BlockKindHeart:
 					assets.PlayHeartSound()
-				default:
+					if c.PlayerHP < int(c.Settings.HeartContainers) {
+						c.PlayerHP++
+					}
+				case BlockKindRegular:
 					assets.PlayHitSound()
+					c.PlayerHP--
+				case BlockKindHarder:
+					// TODO: Make a different sound
+					assets.PlayHitSound()
+					c.PlayerHP -= 2
+				default:
+					// TODO: Make a different sound
+					assets.PlayHitSound()
+					c.PlayerHP -= 3
 				}
-				l.PlayerHP--
-				l.invulnTime = InvulnTime
+				c.invulnTime = InvulnTime
 				// If we know the player is dead, let's adjust the distance of all blocks
-				if l.PlayerHP <= l.Settings.defaultSettings.HpToGameOver {
+				if c.PlayerHP <= c.Settings.defaultSettings.HpToGameOver {
 					dz = tdz
 				}
 				break
@@ -138,35 +149,35 @@ func (l *Core) Update() {
 		}
 	}
 	// Update blocks
-	for _, b := range l.Blocks {
+	for _, b := range c.Blocks {
 		b.z += dz
 	}
 	// Remove any blocks that have fallen off the screen
-	for i := 0; i < len(l.Blocks); i++ {
-		b := l.Blocks[i]
+	for i := 0; i < len(c.Blocks); i++ {
+		b := c.Blocks[i]
 		if b.z < 2. {
-			l.Blocks[i] = l.Blocks[len(l.Blocks)-1]
-			l.Blocks = l.Blocks[:len(l.Blocks)-1]
+			c.Blocks[i] = c.Blocks[len(c.Blocks)-1]
+			c.Blocks = c.Blocks[:len(c.Blocks)-1]
 			i--
 		}
 	}
 
-	l.tick++
-	l.Distance += (l.Speed * BlockDefaultSpeed)
-	// Every 15 second, increase global speed
-	if l.tick%(logic.TPS*15) == 0 {
-		l.Speed += 0.25 // TODO: need a higher base speed, and additional speed here as well
+	c.tick++
+	c.Distance += (c.Speed * BlockDefaultSpeed)
+	// Every 10 seconds, increase global speed
+	if c.tick%(logic.TPS*10) == 0 {
+		c.Speed += 0.5 // TODO: need a higher base speed, and additional speed here as well
 	}
 }
 
-func (l *Core) GetSpeed() float64 {
-	return l.Speed
+func (c *Core) GetSpeed() float64 {
+	return c.Speed
 }
 
-func (l *Core) GetScore() uint64 {
-	return uint64(l.Distance)
+func (c *Core) GetScore() uint64 {
+	return uint64(c.Distance)
 }
 
-func (l *Core) GetTicks() uint64 {
-	return l.tick
+func (c *Core) GetTicks() uint64 {
+	return c.tick
 }

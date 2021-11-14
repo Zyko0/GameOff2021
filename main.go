@@ -37,7 +37,7 @@ type Game struct {
 	hud          *ui.HUD
 
 	core           *core.Core
-	augmentManager *core.AugmentManager
+	augmentManager *augments.Manager
 
 	offscreen *ebiten.Image
 	cache     *graphics.Cache
@@ -57,7 +57,7 @@ func New() *Game {
 		hud:          ui.NewHUD(level.PlayerHP, nil),
 
 		core:           level,
-		augmentManager: core.NewAugmentManager(),
+		augmentManager: augments.NewManager(),
 
 		offscreen: ebiten.NewImage(logic.GameSquareDim, logic.GameSquareDim),
 		cache:     graphics.NewCache(),
@@ -72,6 +72,7 @@ func (g *Game) Update() error {
 		g.core = core.NewCore()
 		g.pauseView.Reset()
 		g.augmentView.Reset()
+		g.augmentManager.Reset()
 		// TODO: Not sure we want to rewind this audio player is a spam "R" is going on
 		assets.ReplayInGameMusic()
 	}
@@ -102,10 +103,17 @@ func (g *Game) Update() error {
 		}
 		// If the view is not active anymore, check for selection
 		a := g.augmentView.Augments[g.augmentView.SelectedIndex]
-		g.augmentManager.AddAugment(a)
+		// Special check for augment re-roll
+		if a.ID == augments.IDFreeRoll {
+			rolls := g.augmentManager.RollAugments()
+			g.augmentView.SetAugments(rolls)
+			return nil
+		}
+		// Otherwise pick augment
+		cost := g.augmentManager.AddAugment(a)
 		g.core.Settings.ApplyAugments(g.augmentManager.CurrentAugments)
-		if a.Cost.Kind == augments.CostKindHP {
-			g.core.PlayerHP -= a.Cost.Value
+		if cost.Kind == augments.CostHP {
+			g.core.PlayerHP -= cost.Value
 		}
 	}
 	// Require a draw

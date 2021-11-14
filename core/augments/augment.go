@@ -18,7 +18,7 @@ const (
 	IDActionDash
 	IDFreeRoll
 	// Epic
-	IDNextFreeCost
+	IDNegateNextCost
 	IDHighSpawn
 	IDHeartSpawn
 	IDSlowMotion
@@ -52,7 +52,7 @@ type CostKind byte
 
 const (
 	CostNone CostKind = iota
-	CostKindHP
+	CostHP
 	CostHalfScore
 )
 
@@ -71,12 +71,17 @@ const (
 )
 
 type Augment struct {
+	cost Cost
+
 	ID          ID
 	Symbol      string
 	Name        string
 	Description string
 	Stackable   bool
 	Rarity      Rarity
-	Cost        Cost
 	Constraints []ID
+}
+
+func (a *Augment) GetCost() Cost {
+	return a.cost
 }

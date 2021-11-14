@@ -60,7 +60,7 @@ func newBaseSettings() *baseSettings {
 			Regular:        true,
 			Harder:         false,
 			Harder2:        false,
-			Heart:          true,
+			Heart:          false,
 		},
 	}
 }

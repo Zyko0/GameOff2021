@@ -12,7 +12,7 @@ func init() {
 	List[IDActionDash] = AugmentActionDash
 	List[IDFreeRoll] = AugmentFreeRoll
 
-	List[IDNextFreeCost] = AugmentNextFreeCost
+	List[IDNegateNextCost] = AugmentNegateNextCost
 	List[IDHighSpawn] = AugmentHighSpawn
 	List[IDHeartSpawn] = AugmentHeartSpawn
 	List[IDSlowMotion] = AugmentSlowMotion
@@ -70,7 +70,7 @@ var (
 		Description: "Increases the lateral speed of the sphere by 10%.",
 		Stackable:   true,
 		Rarity:      RarityCommon,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -81,7 +81,7 @@ var (
 		Description: "Decreases the lateral speed of the sphere by 10%.",
 		Stackable:   true,
 		Rarity:      RarityCommon,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -92,7 +92,7 @@ var (
 		Description: "Traces lines between different blocks, disabled in production of course.",
 		Stackable:   false,
 		Rarity:      RarityCommon,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -103,7 +103,7 @@ var (
 		Description: "It seems your space button now lets you jump. Sorry for having missed this core feature from the release.",
 		Stackable:   false,
 		Rarity:      RarityCommon,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -114,7 +114,7 @@ var (
 		Description: "Your space button now lets you dash in your last inputted direction.",
 		Stackable:   false,
 		Rarity:      RarityCommon,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -125,7 +125,7 @@ var (
 		Description: "Triggers a new roll.",
 		Stackable:   true,
 		Rarity:      RarityCommon,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -134,13 +134,13 @@ var (
 
 var (
 	// Epic
-	AugmentNextFreeCost = &Augment{
-		ID:          IDNextFreeCost,
+	AugmentNegateNextCost = &Augment{
+		ID:          IDNegateNextCost,
 		Name:        "Free cost",
 		Description: "The next exploited bug costs you nothing.",
 		Stackable:   true,
 		Rarity:      RarityEpic,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -151,7 +151,7 @@ var (
 		Description: "How do these blocks not fall btw ?",
 		Stackable:   false,
 		Rarity:      RarityEpic,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -162,8 +162,8 @@ var (
 		Description: "This doesn't really look like a bug, but more like an omitted feature.",
 		Stackable:   false,
 		Rarity:      RarityEpic,
-		Cost: Cost{
-			Kind:  CostKindHP,
+		cost: Cost{
+			Kind:  CostHP,
 			Value: 1,
 		},
 	}
@@ -173,7 +173,7 @@ var (
 		Description: "Every N seconds, you will experience a 2 second lag.",
 		Stackable:   false,
 		Rarity:      RarityEpic,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -184,7 +184,7 @@ var (
 		Description: "This is an additional heart container, devs are bad at their own game so we need this option for a moment.",
 		Stackable:   true,
 		Rarity:      RarityEpic,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -202,7 +202,7 @@ var (
 		Description: "Game is over at -3 hp, why though...",
 		Stackable:   false,
 		Rarity:      RarityLegendary,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -213,8 +213,8 @@ var (
 		Description: "Can someone explain why there is no horizontal boundary anymore ?",
 		Stackable:   false,
 		Rarity:      RarityLegendary,
-		Cost: Cost{
-			Kind:  CostKindHP,
+		cost: Cost{
+			Kind:  CostHP,
 			Value: 1,
 		},
 	}
@@ -224,8 +224,8 @@ var (
 		Description: "The sphere now steps exactly from a row to another, broken TODO: really broken",
 		Stackable:   false,
 		Rarity:      RarityLegendary,
-		Cost: Cost{
-			Kind:  CostKindHP,
+		cost: Cost{
+			Kind:  CostHP,
 			Value: 3, // TODO: Maybe I add this but make it cost a lot of hp ?
 		},
 	}
@@ -235,7 +235,7 @@ var (
 		Description: "Okay the last negative bug you encountered is now fixed.",
 		Stackable:   true,
 		Rarity:      RarityEpic,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -250,7 +250,7 @@ var (
 		Description: "Wait, this game was designed with 3 blocks per spawn at maximum...",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -261,7 +261,7 @@ var (
 		Description: "Some blocks are taller than the other, how is this supposed to make it harder without a jump ?",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -275,7 +275,7 @@ var (
 		Description: "The camera is now positionned on top, this is usefull for debugging purposes.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -286,7 +286,7 @@ var (
 		Description: "Twice the amount of rows spawning... Who let that happen ?",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -297,7 +297,7 @@ var (
 		Description: "Three times the amount of rows spawning, this is for testing.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -311,7 +311,7 @@ var (
 		Description: "So blocks spawn closer now, how is the player supposed to react properly ?",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -322,7 +322,7 @@ var (
 		Description: "So blocks spawn closer now, how is the player supposed to react properly ?",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -336,8 +336,8 @@ var (
 		Description: "",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
-			Kind:  CostKindHP,
+		cost: Cost{
+			Kind:  CostHP,
 			Value: 1,
 		},
 	}
@@ -347,8 +347,8 @@ var (
 		Description: "",
 		Stackable:   true,
 		Rarity:      RarityNegative,
-		Cost: Cost{
-			Kind:  CostKindHP,
+		cost: Cost{
+			Kind:  CostHP,
 			Value: 2,
 		},
 		Constraints: []ID{
@@ -361,7 +361,7 @@ var (
 		Description: "Sorry about that, it might break the last abusive bug, but hey it's a fix !",
 		Stackable:   true,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -372,18 +372,18 @@ var (
 		Description: "We are getting closer to a clean build, bugs will show less often, people don't like bugs, right ?",
 		Stackable:   true,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
 	}
 	AugmentHarderBlocks = &Augment{
 		ID:          IDHarderBlocks,
-		Name:        "Harder Blocks II",
+		Name:        "Harder Blocks",
 		Description: "Some blocks deal more damage, you should recognize them.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -394,7 +394,7 @@ var (
 		Description: "Some blocks deal even more damage, you should also recognize them.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},
@@ -408,7 +408,7 @@ var (
 		Description: "The block you used to know doesn't exist anymore",
 		Stackable:   false,
 		Rarity:      RarityNegative,
-		Cost: Cost{
+		cost: Cost{
 			Kind:  CostNone,
 			Value: 0,
 		},

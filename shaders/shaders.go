@@ -111,7 +111,9 @@ func colorize(p vec3, t, index, seed float) vec3 {
 		pal = PaletteRoad
 	} else if index == PlaneIndex {
 		// TODO: make the plane more fancy maybe ?
-		return vec3(0., 0., 0.247)
+		// return vec3(0., 0., 0.247)
+		p /= p.z
+		return abs(vec3(p.z*0.25, 0., p.x))
 	} else if index == BlockHarderIndex {
 		t = noise(p.xy*8., seed)
 		pal = PaletteBlockHarder
@@ -238,8 +240,10 @@ func sdScene(p vec3) mat3 {
 	// Plane vertical displacement only off-road
 	if p.x < -1. || p.x > 1. {
 		dp := vec2(p.x, p.z)+vec2(0., -Distance)
-		c := abs(1.-(abs(p.x)))*0.1
-		scene[0].x -= noise(dp.xy*10., BlockSeeds[0])*c
+		c := abs(0.05+abs(p.x)*0.3)*0.2
+		n := noise(dp.xy*4., BlockSeeds[0])
+		n += (0.2*noise(dp.xy*12., BlockSeeds[0]))
+		scene[0].x -= n*c
 	}
 
 	roadl := 100.

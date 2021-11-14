@@ -37,6 +37,7 @@ type baseSettings struct {
 	CameraPosition        []float32
 	Circular              bool
 	PlayerSpeed           float64
+	PlayerSpeedModifier   float64
 	AugmentsTicksInterval uint64
 	BlockSettings         BlockSettings
 }
@@ -52,10 +53,11 @@ func newBaseSettings() *baseSettings {
 		CameraPosition:        []float32{0, 0, -1.25},
 		Circular:              false,
 		PlayerSpeed:           0.01,
+		PlayerSpeedModifier:   1.,
 		AugmentsTicksInterval: logic.TPS * 20,
 		BlockSettings: BlockSettings{
 			MaxBlocksSpawn: 3,
-			SpawnInterval:  logic.TPS * 3,
+			SpawnInterval:  logic.TPS * 2,
 			SpawnDepth:     27,
 			Regular:        true,
 			Harder:         false,
@@ -117,13 +119,13 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 		case augments.IDTopView:
 			// TODO: let's see if we want to do that camera stuff, might break shader optimizations
 		case augments.IDMoreSpawns:
-			s.BlockSettings.SpawnInterval = logic.TPS * 2
+			s.BlockSettings.SpawnInterval = logic.TPS * 1.5
 		case augments.IDEvenMoreSpawns:
 			s.BlockSettings.SpawnInterval = logic.TPS * 1
 		case augments.IDCloserSpawns:
-			s.BlockSettings.SpawnDepth = 27 * 2 / 3
+			s.BlockSettings.SpawnDepth = 27 * 3 / 4
 		case augments.IDCloserSpawns2:
-			s.BlockSettings.SpawnDepth = 27 * 1 / 3
+			s.BlockSettings.SpawnDepth = 27 * 1 / 2
 		case augments.IDNothing, augments.IDNothing2:
 			// TODO: nothing
 		case augments.IDLessAugments:
@@ -134,6 +136,8 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.BlockSettings.Harder2 = true
 		case augments.IDNoRegularBlocks:
 			s.BlockSettings.Regular = false
+		case augments.IDFourTimesFaster:
+			s.PlayerSpeedModifier = 2
 		}
 	}
 }

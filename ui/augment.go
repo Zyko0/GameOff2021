@@ -89,6 +89,7 @@ func (av *AugmentView) Active() bool {
 func (av *AugmentView) SetAugments(augments []*augments.Augment) {
 	av.Augments = augments
 	av.active = true
+	ebiten.SetCursorMode(ebiten.CursorModeVisible)
 }
 
 func (av *AugmentView) Update() {
@@ -135,6 +136,9 @@ func (av *AugmentView) Update() {
 		av.active = false
 	} else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && hovered {
 		av.active = false
+	}
+	if av.active == false {
+		ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	}
 
 	av.lastCursorX, av.lastCursorY = x, y
@@ -227,7 +231,7 @@ func (av *AugmentView) Draw(screen *ebiten.Image) {
 				augmentCardOffsetY,
 				augmentCardWidth,
 				augmentCardHeight,
-				1, []float32{1, 1, 1, 0.9},
+				2, []float32{1, 1, 1, 0.9},
 			)
 		}
 	}

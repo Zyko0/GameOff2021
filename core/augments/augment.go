@@ -43,6 +43,7 @@ const (
 	IDHarderBlocks
 	IDHarderBlocks2
 	IDNoRegularBlocks
+	IDFourTimesFaster
 	// TODO: Drunk ? Offseted block positions ?
 
 	IDMax

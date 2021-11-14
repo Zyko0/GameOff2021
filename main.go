@@ -237,6 +237,7 @@ func main() {
 	// Note: setTimeout is called when FPSMoveVsyncOffMaximum which might create lag
 	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	ebiten.SetFullscreen(true)
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 
 	if err := ebiten.RunGame(New()); err != nil {
 		fmt.Println("rungame:", err)

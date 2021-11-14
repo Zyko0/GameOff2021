@@ -170,12 +170,13 @@ func sdBlock(p vec3, i float) mat3 {
 	bi := int(i)
 
 	bs := BlockSizes[bi]
-	blockOffset := vec3(0., 0.999, 0.)
+	blockOffset := vec3(0., 0.999-bs.y/2, 0.)
 	blockOffset = translate(blockOffset, BlockPositions[bi])
 
 	kind := BlockKinds[bi]
 	if kind == BlockIndex {
-		return sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex)
+		d := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex)
+		return d // * (1.+noise(p.xy*32.))
 	} else if kind == BlockHarderIndex {
 		// TODO: shape must be different
 		return sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarderIndex)
@@ -208,7 +209,7 @@ func sdScene(p vec3) mat3 {
 	roadl := 100.
 	roadh := 0.35
 	roadw := 1.0
-	roadOffset := vec3(0., 1.+roadh-0.001, -1.)
+	roadOffset := vec3(0., 0.999+roadh, -1.)
 	road := sdBox(p, vec3(roadw, roadh, roadl), roadOffset, RoadIndex)
 
 	sphereOffset := vec3(0., 0.999, 0.)

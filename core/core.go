@@ -18,7 +18,7 @@ const (
 
 	BlockDefaultSpeed = 0.075
 
-	HeartChance = 0.05
+	HeartChance = 0.075 // Let's make it possible to farm them
 )
 
 type Core struct {
@@ -27,12 +27,13 @@ type Core struct {
 	invulnTime int
 	score      uint64
 
-	PlayerHP int
-	Speed    float64
-	Distance float64
-	Player   *Player
-	Blocks   []*Block
-	Settings *Settings
+	PlayerHP      int
+	Speed         float64
+	Distance      float64
+	Player        *Player
+	ActionManager *ActionManager
+	Blocks        []*Block
+	Settings      *Settings
 }
 
 func NewCore() *Core {
@@ -42,12 +43,13 @@ func NewCore() *Core {
 		invulnTime: 0,
 		score:      0,
 
-		PlayerHP: 3,
-		Speed:    DefaultSpeed,
-		Distance: 0,
-		Player:   NewPlayer(),
-		Blocks:   []*Block{},
-		Settings: newSettings(),
+		PlayerHP:      3,
+		Speed:         DefaultSpeed,
+		Distance:      0,
+		Player:        NewPlayer(),
+		ActionManager: NewActionManager(),
+		Blocks:        []*Block{},
+		Settings:      newSettings(),
 	}
 
 	return c
@@ -72,9 +74,9 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 		switch {
 		case settings.Heart && rng < HeartChance:
 			kind = BlockKindHeart
-		case settings.Harder2 && rng < 0.35:
+		case settings.Harder2 && rng < HeartChance+0.3:
 			kind = BlockKindHarder2
-		case settings.Harder && rng < 0.65:
+		case settings.Harder && rng < HeartChance+0.6:
 			kind = BlockKindHarder
 		case !settings.Regular:
 			kind = BlockKindHarder
@@ -90,7 +92,7 @@ func (c *Core) Update() {
 	// Update player on X axis
 	if c.Player.intentX != 0 {
 		// TODO: don't forget about circular augments
-		dx := c.Player.intentX * c.Settings.PlayerSpeed
+		dx := c.Player.intentX * c.Settings.PlayerSpeed * c.Settings.PlayerSpeedModifier
 		// Check collisions with a wall
 		if diff := c.Player.x + dx - c.Player.radius; diff < 0 {
 			dx -= diff

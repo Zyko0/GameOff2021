@@ -37,6 +37,7 @@ func init() {
 	List[IDHarderBlocks] = AugmentHarderBlocks
 	List[IDHarderBlocks2] = AugmentHarderBlocks2
 	List[IDNoRegularBlocks] = AugmentNoRegularBlocks
+	List[IDFourTimesFaster] = AugmentFourTimesFaster
 
 	// Reprocess description texts for them to fit in card caption
 	for _, a := range List {
@@ -405,7 +406,7 @@ var (
 	AugmentNoRegularBlocks = &Augment{
 		ID:          IDHarderBlocks2,
 		Name:        "No Regular Blocks",
-		Description: "The block you used to know doesn't exist anymore",
+		Description: "The block you used to know doesn't exist anymore, but then it must be replaced by something, hmm...",
 		Stackable:   false,
 		Rarity:      RarityNegative,
 		cost: Cost{
@@ -414,6 +415,17 @@ var (
 		},
 		Constraints: []ID{
 			IDHarderBlocks,
+		},
+	}
+	AugmentFourTimesFaster = &Augment{
+		ID:          IDFourTimesFaster,
+		Name:        "Sound speed",
+		Description: "Your player always moves four times its current speed.",
+		Stackable:   true,
+		Rarity:      RarityNegative,
+		cost: Cost{
+			Kind:  CostNone,
+			Value: 0,
 		},
 	}
 )

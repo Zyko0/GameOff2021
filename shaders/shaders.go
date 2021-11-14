@@ -235,12 +235,21 @@ func colorFromObj(p vec3, obj mat3) vec3 {
 
 func sdScene(p vec3) mat3 {
 	scene := sdPlane(p, normalize(vec3(0., -1., 0.)), 1., PlaneIndex) // default floor
+	// Plane vertical displacement only off-road
+	if p.x < -1. || p.x > 1. {
+		dp := vec2(p.x, p.z)+vec2(0., -Distance)
+		c := abs(1.-(abs(p.x)))*0.1
+		scene[0].x -= noise(dp.xy*10., BlockSeeds[0])*c
+	}
 
 	roadl := 100.
 	roadh := 0.35
 	roadw := 1.0
 	roadOffset := vec3(0., 0.999+roadh, -1.)
 	road := sdBox(p, vec3(roadw, roadh, roadl), roadOffset, RoadIndex)
+	// Road vertical displacement
+	dp := vec2(p.x, p.z)+vec2(0., -Distance)
+	road[0].x -= noise(dp.xy*10., BlockSeeds[0])*0.02
 
 	sphereOffset := vec3(0., 0.999, 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)

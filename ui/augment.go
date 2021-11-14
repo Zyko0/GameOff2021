@@ -137,7 +137,7 @@ func (av *AugmentView) Update() {
 	} else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && hovered {
 		av.active = false
 	}
-	if av.active == false {
+	if !av.active {
 		ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	}
 

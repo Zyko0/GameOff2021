@@ -61,18 +61,32 @@ func noise(p vec2, seed float) float {
 	return res*res
 }
 
-func background(p vec3) vec3 {
-	space := vec3(0.01, 0.01, 0.01)
+func background(p vec2) vec3 {
+	space := vec3(0.01)
+	// TODO: this is not super great but whatever for now
+	if p.y < 0.03 {
+		po := p
+		dx := abs(p.x)
+		dz := sqrt(2000.+Distance)*0.1
+		v := vec2(
+			-sign(p.x) * dx * 0.01,
+			dx * 0.1 * 0.01,
+		)
+		p += v*dz
+		sc := 500.-(100.*abs(po.x))
+		n := noise(p*sc, BlockSeeds[0])
+		n = smoothstep(0.00125, 0., n)
 
-	oriY := p.y
-	// p.x = abs(p.x) // TODO: do not want symmetry
-	p.x -= sign(p.x) * p.z * 0.005
-	p.x = abs(p.x)*0.1
-	p.y += p.z * 0.002
-	n := fract(noise(p.xy*500., BlockSeeds[0]))
-	if oriY < 0.03 && n < 0.002 {
-		return vec3(0.5)
+		nebulae := noise(po*2., BlockSeeds[0])
+		bg := vec3(
+			noise(po, BlockSeeds[1]),
+			noise(po, BlockSeeds[2]),
+			noise(po, BlockSeeds[3]),
+		)*smoothstep(1., 0., nebulae)*0.2
+
+		return vec3(n)+bg
 	}
+
 	return space
 }
 
@@ -340,7 +354,7 @@ func softShadow(ro, rd vec3, mint, tmax float) float {
 
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 	uv := (position.xy / ScreenSize) * 2. - 1.
-	bgColor := background(vec3(uv.xy, Distance))
+	bgColor := background(uv.xy)
 
 	// Early abort if at top part of screen
 	if uv.y < 0. {

@@ -215,6 +215,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		return
 	}
 	// Debug
+	// TODO: this debug took 17sec out of 120sec which is pretty huge
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("TPS %.2f - FPS %.2f - Tick %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
 			ebiten.CurrentTPS(),

@@ -9,6 +9,7 @@ type Cache struct {
 	BlockPositions []float32
 	BlockSizes     []float32
 	BlockKinds     []float32
+	BlockSeeds     []float32
 }
 
 func NewCache() *Cache {
@@ -17,11 +18,13 @@ func NewCache() *Cache {
 		BlockPositions: make([]float32, maxBlocks*3),
 		BlockSizes:     make([]float32, maxBlocks*2),
 		BlockKinds:     make([]float32, maxBlocks),
+		BlockSeeds:     nil,
 	}
 }
 
 func (c *Cache) Reset() {
 	c.BlockCount = 0
+	c.BlockSeeds = nil
 	for i := range c.BlockPositions {
 		c.BlockPositions[i] = 0
 	}

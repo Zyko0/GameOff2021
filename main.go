@@ -73,6 +73,7 @@ func (g *Game) Update() error {
 		g.pauseView.Reset()
 		g.augmentView.Reset()
 		g.augmentManager.Reset()
+		g.cache.Reset()
 		// TODO: Not sure we want to rewind this audio player is a spam "R" is going on
 		assets.ReplayInGameMusic()
 	}
@@ -146,6 +147,7 @@ func (g *Game) Update() error {
 	assets.ResumeInGameMusic()
 	// Set graphic data
 	g.cache.BlockCount = len(g.core.Blocks)
+	g.cache.BlockSeeds = g.core.GetBlockSeeds()
 	for i, b := range g.core.Blocks {
 		x, y, z := core.XYZToGraphics(b.GetX(), b.GetY(), b.GetZ())
 		g.cache.BlockPositions[i*3+0] = float32(x)
@@ -177,6 +179,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"BlockPositions": g.cache.BlockPositions,
 				"BlockSizes":     g.cache.BlockSizes,
 				"BlockKinds":     g.cache.BlockKinds,
+				"BlockSeeds":     g.cache.BlockSeeds,
 
 				"PalettePlayer":       graphics.PalettePlayer,
 				"PaletteBlock":        graphics.PaletteBlock,

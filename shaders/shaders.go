@@ -34,6 +34,7 @@ var BlockCount float
 var BlockPositions [32]vec3
 var BlockSizes [32]vec2
 var BlockKinds [32]float
+var BlockSeeds [7]float
 
 // TODO: If this is too much uniform for a specific platform, can always hardcode these
 var PalettePlayer [4]vec4
@@ -43,21 +44,36 @@ var PaletteBlockHarder [4]vec4
 var PaletteBlockHarder2 [4]vec4
 var PaletteHeart [4]vec4
 
-func hash(p vec2) float { 
-	return fract(sin(dot(p, vec2(12.9898, 4.1414))) * 43758.5453)
+func hash(p vec2, seed float) float { 
+	return fract(sin(dot(p, vec2(12.9898, 4.1414))) * 43758.5453 * seed)
 }
 
 // https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83#generic-123-noise
-func noise(p vec2) float {
+func noise(p vec2, seed float) float {
 	ip := floor(p)
 	u := fract(p)
 	u = u*u*(3.0-2.0*u)
 	
 	res := mix(
-		mix(hash(ip), hash(ip+vec2(1.0,0.0)), u.x),
-		mix(hash(ip+vec2(0.0,1.0)), hash(ip+vec2(1.0,1.0)), u.x), u.y)
+		mix(hash(ip, seed), hash(ip+vec2(1.,0.), seed), u.x),
+		mix(hash(ip+vec2(0.,1.), seed), hash(ip+vec2(1.,1.), seed), u.x), u.y)
 	
 	return res*res
+}
+
+func background(p vec3) vec3 {
+	space := vec3(0.01, 0.01, 0.01)
+
+	oriY := p.y
+	// p.x = abs(p.x) // TODO: do not want symmetry
+	p.x -= sign(p.x) * p.z * 0.005
+	p.x = abs(p.x)*0.1
+	p.y += p.z * 0.002
+	n := fract(noise(p.xy*500., BlockSeeds[0]))
+	if oriY < 0.03 && n < 0.002 {
+		return vec3(0.5)
+	}
+	return space
 }
 
 func palette(t float, a, b, c, d vec4) vec3 {
@@ -73,7 +89,7 @@ func palette(t float, a, b, c, d vec4) vec3 {
 	return sqrt(clr)
 }
 
-func colorize(p vec3, t, index float) vec3 {
+func colorize(p vec3, t, index, seed float) vec3 {
 	var pal [4]vec4
 
 	if index == PlayerIndex {
@@ -82,31 +98,31 @@ func colorize(p vec3, t, index float) vec3 {
 		// X Rotation
 		s := sin(PlayerPosition.x*8.)
 		c := cos(PlayerPosition.x*8.)
-		t = noise(p.xy*mat2(c, -s, s, c)*scale)
+		t = noise(p.xy*mat2(c, -s, s, c)*scale, seed)
 		pal = PalettePlayer
 	} else if index == BlockIndex {
-		t = noise(p.xy*8.)
+		t = noise(p.xy*8., seed)
 		pal = PaletteBlock
 	} else if index == RoadIndex {
 		p.z -= Distance
-		t = noise(p.xz*2.)
-		t *= (1+noise(p.xz*4.))
-		t *= (1+noise(p.xz*6.))
+		t = noise(p.xz*2., seed)
+		t *= (1+noise(p.xz*4., seed))
+		t *= (1+noise(p.xz*6., seed))
 		pal = PaletteRoad
 	} else if index == PlaneIndex {
 		// TODO: make the plane more fancy maybe ?
 		return vec3(0., 0., 0.247)
 	} else if index == BlockHarderIndex {
-		t = noise(p.xy*8.)
+		t = noise(p.xy*8., seed)
 		pal = PaletteBlockHarder
 	} else if index == BlockHarder2Index {
-		t = noise(p.xy*8.)
+		t = noise(p.xy*8., seed)
 		pal = PaletteBlockHarder2
 	} else if index == BlockHeartIndex {
 		p = normalize(p)
 		y := -p.y-abs(p.x)
 		t = abs(sqrt(p.x*p.x+y*y) - 1.0)
-		// t = noise(p.xy*64.) // length(p.xy)-0.1 // noise(p.xy*8./5.)
+		// t = noise(p.xy*64., seed) // length(p.xy)-0.1 // noise(p.xy*8./5.)
 		pal = PaletteHeart
 	}
 	
@@ -155,9 +171,10 @@ func sdHeart(p, b, offset vec3, index float) mat3 {
 	p = translate(p, offset)
 
 	x := p.x
-	y := -p.y-abs(p.x)
+	y := -p.y*1.2-abs(p.x)
 	z := p.z
-	d := sqrt(x*x+y*y+z*z) - b.x
+	d := sqrt(x*x+y*y+z*z) - b.x/5.*4. // Dirty fix
+	offset.y += p.y*0.2
 
 	return mat3(
 		vec3(d, index, 0.),
@@ -175,14 +192,23 @@ func sdBlock(p vec3, i float) mat3 {
 
 	kind := BlockKinds[bi]
 	if kind == BlockIndex {
-		d := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex)
-		return d // * (1.+noise(p.xy*32.))
+		obj := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex)
+		p = translate(p, obj[1].xyz)
+		c := 20.
+		obj[0].x -= noise(p.xy*c, BlockSeeds[bi])*p.z*0.2
+		return obj
 	} else if kind == BlockHarderIndex {
-		// TODO: shape must be different
-		return sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarderIndex)
+		obj := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarderIndex)
+		p = translate(p, obj[1].xyz)
+		c := 30.
+		obj[0].x -= noise(p.xy*c, BlockSeeds[bi])*p.z*0.2
+		return obj
 	} else if kind == BlockHarder2Index {
-		// TODO: shape must be different here too
-		return sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarder2Index)
+		obj := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarder2Index)
+		p = translate(p, obj[1].xyz)
+		c := 40.
+		obj[0].x -= noise(p.xy*c, BlockSeeds[bi])*p.z*0.2
+		return obj
 	} else if kind == BlockHeartIndex {
 		return sdHeart(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHeartIndex)
 	}
@@ -200,7 +226,11 @@ func minWithData(obj1, obj2 mat3) mat3 {
 
 func colorFromObj(p vec3, obj mat3) vec3 {
 	p = translate(p, obj[1])
-	return colorize(p, -obj[0].x, obj[0].y)
+	seed := BlockSeeds[int(obj[0].y)]
+	if obj[0].y >= BlockIndex {
+		seed += obj[1].x
+	}
+	return colorize(p, -obj[0].x, obj[0].y, seed)
 }
 
 func sdScene(p vec3) mat3 {
@@ -214,7 +244,7 @@ func sdScene(p vec3) mat3 {
 
 	sphereOffset := vec3(0., 0.999, 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)
-	// * 2 radius is a hack to make sense with software value
+	// TODO: * 2 radius is a hack to make sense with software value
 	spherePlayer := sdSphere(p, PlayerRadius*2., sphereOffset, PlayerIndex)
 	
 	scene = minWithData(scene, minWithData(road, spherePlayer))
@@ -296,8 +326,8 @@ func softShadow(ro, rd vec3, mint, tmax float) float {
 }
 
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
-	bgColor := vec3(0.01, 0.01, 0.01)
 	uv := (position.xy / ScreenSize) * 2. - 1.
+	bgColor := background(vec3(uv.xy, Distance))
 
 	// Early abort if at top part of screen
 	if uv.y < 0. {

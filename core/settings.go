@@ -60,9 +60,9 @@ func newBaseSettings() *baseSettings {
 			SpawnInterval:  logic.TPS * 2,
 			SpawnDepth:     27,
 			Regular:        true,
-			Harder:         false,
-			Harder2:        false,
-			Heart:          false,
+			Harder:         true,
+			Harder2:        true,
+			Heart:          true,
 		},
 	}
 }

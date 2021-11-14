@@ -24,6 +24,8 @@ const (
 type Core struct {
 	tick uint64
 
+	blockSeeds []float32
+
 	invulnTime int
 	score      uint64
 
@@ -37,8 +39,14 @@ type Core struct {
 }
 
 func NewCore() *Core {
+	seeds := make([]float32, 7)
+	for i := range seeds {
+		seeds[i] = rand.Float32()
+	}
 	c := &Core{
 		tick: 0,
+
+		blockSeeds: seeds,
 
 		invulnTime: 0,
 		score:      0,
@@ -170,6 +178,10 @@ func (c *Core) Update() {
 	if c.tick%(logic.TPS*10) == 0 {
 		c.Speed += 0.5 // TODO: need a higher base speed, and additional speed here as well
 	}
+}
+
+func (c *Core) GetBlockSeeds() []float32 {
+	return c.blockSeeds
 }
 
 func (c *Core) GetSpeed() float64 {

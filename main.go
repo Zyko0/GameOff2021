@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"image/color"
 	"math/rand"
+	"runtime/debug"
 	"time"
 
 	"github.com/Zyko0/GameOff2021/assets"
@@ -14,8 +16,8 @@ import (
 	"github.com/Zyko0/GameOff2021/shaders"
 	"github.com/Zyko0/GameOff2021/ui"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
 var (
@@ -26,6 +28,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 
 	geom.Translate(float64(logic.ScreenWidth-logic.GameSquareDim)/2, 0)
+	debug.SetGCPercent(-1)
 }
 
 type Game struct {
@@ -123,7 +126,7 @@ func (g *Game) Update() error {
 	g.cache.Reset()
 	// Reset player's moving intents
 	g.core.Player.SetIntentX(0)
-	g.core.Player.SetIntentAction(false)
+	g.core.Player.SetIntentJump(false)
 	// Quit
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		// TODO: Don't forget to remove this
@@ -132,7 +135,7 @@ func (g *Game) Update() error {
 	// Jump
 	// TODO:
 	if kpd := inpututil.KeyPressDuration(ebiten.KeySpace); kpd > 0 {
-		g.core.Player.SetIntentAction(true)
+		g.core.Player.SetIntentJump(true)
 	}
 	// Move player right
 	if kpd := inpututil.KeyPressDuration(ebiten.KeyRight); kpd > 0 {
@@ -216,18 +219,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	// Debug
 	// TODO: this debug took 17sec out of 120sec which is pretty huge
-	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("TPS %.2f - FPS %.2f - Tick %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
-			ebiten.CurrentTPS(),
-			ebiten.CurrentFPS(),
-			g.core.GetTicks(),
-			len(g.core.Blocks),
-			g.core.GetScore(),
-			g.core.GetSpeed(),
-			g.core.PlayerHP,
-			g.core.Distance,
-		),
+	str := fmt.Sprintf("TPS %.2f - FPS %.2f - Tick %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f - PY %.2f",
+		ebiten.CurrentTPS(),
+		ebiten.CurrentFPS(),
+		g.core.GetTicks(),
+		len(g.core.Blocks),
+		g.core.GetScore(),
+		g.core.GetSpeed(),
+		g.core.PlayerHP,
+		g.core.Distance,
+		g.core.Player.GetY(),
 	)
+	text.Draw(screen, str, assets.CardBodyDescriptionTextFontFace, 0, 20, color.RGBA{255, 255, 255, 255})
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -235,6 +238,20 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	/*
+		f, err := os.Create("beat.prof")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			fmt.Println("couldn't profile:", err)
+			return
+		}
+		defer pprof.StopCPUProfile()
+	*/
+
 	ebiten.SetMaxTPS(logic.TPS)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	// TODO: set vsync on

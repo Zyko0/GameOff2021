@@ -21,16 +21,18 @@ const (
 )
 
 type Block struct {
-	x, y, z float64
-	kind    BlockKind
+	width, height, x, y, z float64
+	kind                   BlockKind
 }
 
 func newBlock(x, y, z, width, height float64, kind BlockKind) *Block {
 	return &Block{
-		x:    x + width/2,
-		y:    height / 2,
-		z:    z,
-		kind: kind,
+		width:  width,
+		height: height,
+		x:      x + width/2,
+		y:      height / 2,
+		z:      z,
+		kind:   kind,
 	}
 }
 
@@ -47,11 +49,11 @@ func (b *Block) GetZ() float64 {
 }
 
 func (b *Block) GetWidth() float64 {
-	return BlockWidth0
+	return b.width
 }
 
 func (b *Block) GetHeight() float64 {
-	return BlockHeight0
+	return b.height
 }
 
 func (b *Block) GetKind() BlockKind {

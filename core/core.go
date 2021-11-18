@@ -22,20 +22,22 @@ const (
 )
 
 type Core struct {
-	tick uint64
+	tick            uint64
+	intSpeed        uint64
+	prevIntDistance uint64
+	intDistance     uint64
 
 	blockSeeds []float32
 
 	invulnTime int
 	score      uint64
 
-	PlayerHP      int
-	Speed         float64
-	Distance      float64
-	Player        *Player
-	ActionManager *ActionManager
-	Blocks        []*Block
-	Settings      *Settings
+	PlayerHP int
+	Speed    float64
+	Distance float64
+	Player   *Player
+	Blocks   []*Block
+	Settings *Settings
 }
 
 func NewCore() *Core {
@@ -44,27 +46,29 @@ func NewCore() *Core {
 		seeds[i] = rand.Float32()
 	}
 	c := &Core{
-		tick: 0,
+		tick:            0,
+		intSpeed:        1,
+		prevIntDistance: 0,
+		intDistance:     0,
 
 		blockSeeds: seeds,
 
 		invulnTime: 0,
 		score:      0,
 
-		PlayerHP:      3,
-		Speed:         DefaultSpeed,
-		Distance:      0,
-		Player:        NewPlayer(),
-		ActionManager: NewActionManager(),
-		Blocks:        []*Block{},
-		Settings:      newSettings(),
+		PlayerHP: 3,
+		Speed:    DefaultSpeed,
+		Distance: 0,
+		Player:   NewPlayer(),
+		Blocks:   []*Block{},
+		Settings: newSettings(),
 	}
 
 	return c
 }
 
 func spawnBlocks(settings *BlockSettings) []*Block {
-	blockCount := rand.Intn(settings.MaxBlocksSpawn) + 1
+	blockCount := settings.MinBlocksSpawn + rand.Intn(settings.MaxBlocksSpawn-settings.MinBlocksSpawn)
 	blocks := make([]*Block, blockCount)
 	indices := []int{0, 1, 2, 3, 4}
 	for i := 0; i < blockCount; i++ {
@@ -97,10 +101,13 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 }
 
 func (c *Core) Update() {
+	// Update player's jump
+	c.Player.jump.Update(c.Player.intentJump)
 	// Update player on X axis
 	if c.Player.intentX != 0 {
-		// TODO: don't forget about circular augments
-		dx := c.Player.intentX * c.Settings.PlayerSpeed * c.Settings.PlayerSpeedModifier
+		// TODO: let's multiply player speed by (1+(1-gamespeed)/4) arbitrarily
+		pSpeed := c.Settings.PlayerSpeed * c.Settings.PlayerSpeedModifier * (1 + (c.Speed - 1.))
+		dx := c.Player.intentX * pSpeed
 		// Check collisions with a wall
 		if diff := c.Player.x + dx - c.Player.radius; diff < 0 {
 			dx -= diff
@@ -115,8 +122,11 @@ func (c *Core) Update() {
 		}
 		c.Player.x += dx
 	}
-	// Every spawninterval ticks, spawn some blocks
-	if c.tick%c.Settings.BlockSettings.SpawnInterval == 0 {
+	// Every distance interval, spawn some blocks
+	// TODO: trying on distance but broken yet
+	dist := c.Settings.BlockSettings.SpawnDistanceInterval
+	if c.intDistance/dist > (c.intDistance-c.intSpeed)/dist {
+		// if c.tick%c.Settings.BlockSettings.SpawnDistanceInterval == 0 {
 		blocks := spawnBlocks(&c.Settings.BlockSettings)
 		c.Blocks = append(c.Blocks, blocks...)
 	}
@@ -130,7 +140,7 @@ func (c *Core) Update() {
 		// If there's a depth hit and not in an invulnerability frame, check for damage loss
 		if c.invulnTime <= 0 {
 			// Check z intersection
-			if collides, tdz := internal.DepthCollisionPlayerBlock(c.Player, b, dz); collides {
+			if collides, tdz := internal.DepthCollisionPlayerTest(c.Player, b, dz); collides {
 				switch b.kind {
 				case BlockKindHeart:
 					assets.PlayHeartSound()
@@ -173,10 +183,12 @@ func (c *Core) Update() {
 	}
 
 	c.tick++
+	c.intDistance += 1 // c.intSpeed
 	c.Distance += (c.Speed * BlockDefaultSpeed)
 	// Every 10 seconds, increase global speed
 	if c.tick%(logic.TPS*10) == 0 {
-		c.Speed += 0.5 // TODO: need a higher base speed, and additional speed here as well
+		// c.Speed += 0.5 // TODO: need a higher base speed, and additional speed here as well
+		c.intSpeed += 1
 	}
 }
 

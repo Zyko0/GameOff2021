@@ -21,8 +21,9 @@ const (
 )
 
 type BlockSettings struct {
+	MinBlocksSpawn                  int
 	MaxBlocksSpawn                  int
-	SpawnInterval                   uint64
+	SpawnDistanceInterval           uint64
 	SpawnDepth                      float64
 	Regular, Harder, Harder2, Heart bool
 }
@@ -45,7 +46,7 @@ type baseSettings struct {
 func newBaseSettings() *baseSettings {
 	return &baseSettings{
 		Action:                ActionNone,
-		HpToGameOver:          0,
+		HpToGameOver:          0, //TODO: just trolling
 		SlowMotion:            false,
 		HeartContainers:       3,
 		PerfectStep:           false,
@@ -56,13 +57,14 @@ func newBaseSettings() *baseSettings {
 		PlayerSpeedModifier:   1.,
 		AugmentsTicksInterval: logic.TPS * 20,
 		BlockSettings: BlockSettings{
-			MaxBlocksSpawn: 3,
-			SpawnInterval:  logic.TPS * 2,
-			SpawnDepth:     27,
-			Regular:        true,
-			Harder:         true,
-			Harder2:        true,
-			Heart:          true,
+			MinBlocksSpawn:        2,
+			MaxBlocksSpawn:        3,
+			SpawnDistanceInterval: 80,
+			SpawnDepth:            27,
+			Regular:               true,
+			Harder:                true,
+			Harder2:               true,
+			Heart:                 true,
 		},
 	}
 }
@@ -85,16 +87,8 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 
 	for _, a := range currentAugments {
 		switch a.ID {
-		case augments.IDIncreaseSpeed:
-			s.PlayerSpeed = s.defaultSettings.PlayerSpeed + 0.002
-		case augments.IDDecreaseSpeed:
-			s.PlayerSpeed = s.defaultSettings.PlayerSpeed - 0.002
 		case augments.IDDebugLines:
 			s.DebugLines = true
-		case augments.IDActionJump:
-			s.Action = ActionJump
-		case augments.IDActionDash:
-			s.Action = ActionDash
 		case augments.IDHighSpawn:
 			// TODO: higher spawn possible
 		case augments.IDSlowMotion:
@@ -119,9 +113,9 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 		case augments.IDTopView:
 			// TODO: let's see if we want to do that camera stuff, might break shader optimizations
 		case augments.IDMoreSpawns:
-			s.BlockSettings.SpawnInterval = logic.TPS * 1.5
+			s.BlockSettings.SpawnDistanceInterval = 70
 		case augments.IDEvenMoreSpawns:
-			s.BlockSettings.SpawnInterval = logic.TPS * 1
+			s.BlockSettings.SpawnDistanceInterval = 60
 		case augments.IDCloserSpawns:
 			s.BlockSettings.SpawnDepth = 27 * 3 / 4
 		case augments.IDCloserSpawns2:
@@ -136,8 +130,6 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.BlockSettings.Harder2 = true
 		case augments.IDNoRegularBlocks:
 			s.BlockSettings.Regular = false
-		case augments.IDFourTimesFaster:
-			s.PlayerSpeedModifier = 2
 		}
 	}
 }

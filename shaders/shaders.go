@@ -203,7 +203,7 @@ func sdBlock(p vec3, i float) mat3 {
 	bi := int(i)
 
 	bs := BlockSizes[bi]
-	blockOffset := vec3(0., 0.999-bs.y/2, 0.)
+	blockOffset := vec3(0., 0., 0.)
 	blockOffset = translate(blockOffset, BlockPositions[bi])
 
 	kind := BlockKinds[bi]
@@ -269,7 +269,7 @@ func sdScene(p vec3) mat3 {
 	dp := vec2(p.x, p.z)+vec2(0., -Distance)
 	road[0].x -= noise(dp.xy*10., BlockSeeds[0])*0.02
 
-	sphereOffset := vec3(0., 0.999, 0.)
+	sphereOffset := vec3(0., 0., 0.)
 	sphereOffset = translate(sphereOffset, PlayerPosition)
 	// TODO: * 2 radius is a hack to make sense with software value
 	spherePlayer := sdSphere(p, PlayerRadius*2., sphereOffset, PlayerIndex)
@@ -288,8 +288,8 @@ func sdScene(p vec3) mat3 {
 
 func rayMarch(ro, rd vec3, start, end float) mat3 {
 	const (
-		MaxSteps = 64. // TODO: Can lower this constant on-need for performance
-		Precision = 0.005 // TODO: was 0.001
+		MaxSteps = 64.
+		Precision = 0.005
 	)
 
 	depth := start
@@ -334,22 +334,22 @@ func phong(lightDir, normal, rd, clr vec3) vec3 {
   
 func softShadow(ro, rd vec3, mint, tmax float) float {
 	const (
-		MaxSteps = 8.
+		MaxSteps = 16.
 		Precision = 0.001
 	)
 
-	res := 1.0
+	res := 1.
 	t := mint
 	for i := 0.; i < MaxSteps; i++ {
 		h := sdScene(ro + rd * t)[0].x
-		res = min(res, 8.0*h/t)
+		res = min(res, 8.*h/t)
 		t += clamp(h, 0.02, 0.10)
 		if h < Precision || t > tmax {
 			break
 		}
 	}
   
-	return clamp(res, 0.0, 1.0)
+	return clamp(res, 0., 1.)
 }
 
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
@@ -369,7 +369,7 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 
 	var clr vec3
 
-	if (d > MaxDepth) {
+	if d > MaxDepth {
 		clr = bgColor // ray didn't hit anything
 	} else {
 		p := ro + rd * d
@@ -378,11 +378,11 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 
 		// Light stuff
 		normal := calcNormal(p)
-    	lightPosition := ro - vec3(0, 16., -32.) // let's say light is at camera position
+    	lightPosition := ro - vec3(0, 8., -32.) // let's say light is at camera position
     	lightDirection := normalize(lightPosition - p)
-		lightIntensity := 1.0
+		lightIntensity := 1.
 
-		softShadows := clamp(softShadow(p, lightDirection, 0.02, 2.5), 0.1, 1.0)
+		softShadows := clamp(softShadow(p, lightDirection, 0.02, 2.5), 0.1, 1.)
 	
 		clr = lightIntensity * phong(lightDirection, normal, rd, clr)
 		clr *= softShadows

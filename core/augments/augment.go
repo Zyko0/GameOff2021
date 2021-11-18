@@ -11,11 +11,7 @@ type ID byte
 
 const (
 	// Common
-	IDIncreaseSpeed ID = iota
-	IDDecreaseSpeed
-	IDDebugLines
-	IDActionJump
-	IDActionDash
+	IDDebugLines ID = iota
 	IDFreeRoll
 	// Epic
 	IDNegateNextCost
@@ -43,7 +39,6 @@ const (
 	IDHarderBlocks
 	IDHarderBlocks2
 	IDNoRegularBlocks
-	IDFourTimesFaster
 	// TODO: Drunk ? Offseted block positions ?
 
 	IDMax

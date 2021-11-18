@@ -5,11 +5,7 @@ var (
 )
 
 func init() {
-	List[IDIncreaseSpeed] = AugmentIncreaseSpeed
-	List[IDDecreaseSpeed] = AugmentDecreaseSpeed
 	List[IDDebugLines] = AugmentDebugLines
-	List[IDActionJump] = AugmentActionJump
-	List[IDActionDash] = AugmentActionDash
 	List[IDFreeRoll] = AugmentFreeRoll
 
 	List[IDNegateNextCost] = AugmentNegateNextCost
@@ -37,7 +33,6 @@ func init() {
 	List[IDHarderBlocks] = AugmentHarderBlocks
 	List[IDHarderBlocks2] = AugmentHarderBlocks2
 	List[IDNoRegularBlocks] = AugmentNoRegularBlocks
-	List[IDFourTimesFaster] = AugmentFourTimesFaster
 
 	// Reprocess description texts for them to fit in card caption
 	for _, a := range List {
@@ -65,54 +60,10 @@ func init() {
 
 var (
 	// Common
-	AugmentIncreaseSpeed = &Augment{
-		ID:          IDIncreaseSpeed,
-		Name:        "Speed hack",
-		Description: "Increases the lateral speed of the sphere by 10%.",
-		Stackable:   true,
-		Rarity:      RarityCommon,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
-		},
-	}
-	AugmentDecreaseSpeed = &Augment{
-		ID:          IDDecreaseSpeed,
-		Name:        "Speed fix",
-		Description: "Decreases the lateral speed of the sphere by 10%.",
-		Stackable:   true,
-		Rarity:      RarityCommon,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
-		},
-	}
 	AugmentDebugLines = &Augment{
 		ID:          IDDebugLines,
 		Name:        "Dev Mode",
 		Description: "Traces lines between different blocks, disabled in production of course.",
-		Stackable:   false,
-		Rarity:      RarityCommon,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
-		},
-	}
-	AugmentActionJump = &Augment{
-		ID:          IDActionJump,
-		Name:        "Jump",
-		Description: "It seems your space button now lets you jump. Sorry for having missed this core feature from the release.",
-		Stackable:   false,
-		Rarity:      RarityCommon,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
-		},
-	}
-	AugmentActionDash = &Augment{
-		ID:          IDActionDash,
-		Name:        "Dash",
-		Description: "Your space button now lets you dash in your last inputted direction.",
 		Stackable:   false,
 		Rarity:      RarityCommon,
 		cost: Cost{
@@ -266,9 +217,6 @@ var (
 			Kind:  CostNone,
 			Value: 0,
 		},
-		Constraints: []ID{
-			IDActionJump,
-		},
 	}
 	AugmentTopView = &Augment{
 		ID:          IDTopView,
@@ -415,17 +363,6 @@ var (
 		},
 		Constraints: []ID{
 			IDHarderBlocks,
-		},
-	}
-	AugmentFourTimesFaster = &Augment{
-		ID:          IDFourTimesFaster,
-		Name:        "Sound speed",
-		Description: "Your player always moves four times its current speed.",
-		Stackable:   true,
-		Rarity:      RarityNegative,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
 		},
 	}
 )

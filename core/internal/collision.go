@@ -34,7 +34,7 @@ func DepthCollisionPlayerTest(p Player, block Block, blockDeltaZ float64) (bool,
 		for dz := blockDeltaZ; dz < 0; dz += bW {
 			if pZ+pR > bZ+dz-bW && pZ-pR < bZ+dz+bW {
 				// There's a collision on 3D plane
-				return true, dz
+				return true, dz + pR
 			}
 		}
 	}

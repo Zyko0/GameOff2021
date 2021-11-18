@@ -30,12 +30,11 @@ func DepthCollisionPlayerTest(p Player, block Block, blockDeltaZ float64) (bool,
 		// Dirty brute force to check for a collision on the Z axis at high speed
 		// TODO: make this not bruteforce
 		// Note: Udpate => It doesn't seem to loop too much anyways, pretty much a wontfix
-		pr2 := pR*2 - 0.0001
-		// Step by circle size multiple times
-		for dz := blockDeltaZ; dz < 0; dz += pr2 {
-			if pZ+pR > bZ+dz-bW/2 && pZ-pR < bZ+dz+bW/2 {
+		// Step by halfblock width multiple times
+		for dz := blockDeltaZ; dz < 0; dz += bW {
+			if pZ+pR > bZ+dz-bW && pZ-pR < bZ+dz+bW {
 				// There's a collision on 3D plane
-				return true, dz + pR + bW/2
+				return true, dz
 			}
 		}
 	}

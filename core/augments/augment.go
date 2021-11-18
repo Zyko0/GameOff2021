@@ -39,6 +39,8 @@ const (
 	IDHarderBlocks
 	IDHarderBlocks2
 	IDNoRegularBlocks
+	// TODO: JumpLocked
+	// TODO: MovementLocked
 	// TODO: Drunk ? Offseted block positions ?
 
 	IDMax

@@ -109,10 +109,15 @@ func colorize(p vec3, t, index, seed float) vec3 {
 	if index == PlayerIndex {
 		const scale = 16.
 
+		// Y Rotation
+		s := sin(Distance*2.)
+		c := cos(Distance*2.)
+		p.yz *= -mat2(c, s, -s, c)
 		// X Rotation
-		s := sin(PlayerPosition.x*8.)
-		c := cos(PlayerPosition.x*8.)
-		t = noise(p.xy*mat2(c, -s, s, c)*scale, seed)
+		s = sin(PlayerPosition.x*8.)
+		c = cos(PlayerPosition.x*8.)
+		p.xy *= mat2(c, -s, s, c)
+		t = noise(p*scale, seed)
 		pal = PalettePlayer
 	} else if index == BlockIndex {
 		t = noise(p.xy*8., seed)

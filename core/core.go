@@ -124,9 +124,8 @@ func (c *Core) Update() {
 	}
 	// Every distance interval, spawn some blocks
 	// TODO: trying on distance but broken yet
-	dist := c.Settings.BlockSettings.SpawnDistanceInterval
-	if c.intDistance/dist > (c.intDistance-c.intSpeed)/dist {
-		// if c.tick%c.Settings.BlockSettings.SpawnDistanceInterval == 0 {
+	distMod := c.intDistance % uint64(float64(c.Settings.BlockSettings.SpawnDistanceInterval)/c.Speed)
+	if distMod == 0 {
 		blocks := spawnBlocks(&c.Settings.BlockSettings)
 		c.Blocks = append(c.Blocks, blocks...)
 	}
@@ -187,7 +186,7 @@ func (c *Core) Update() {
 	c.Distance += (c.Speed * BlockDefaultSpeed)
 	// Every 10 seconds, increase global speed
 	if c.tick%(logic.TPS*10) == 0 {
-		// c.Speed += 0.5 // TODO: need a higher base speed, and additional speed here as well
+		c.Speed += 0.5 // TODO: need a higher base speed, and additional speed here as well
 		c.intSpeed += 1
 	}
 }

@@ -5,7 +5,7 @@ const (
 	BlockWidth1 = 0.4
 
 	BlockHeight0 = 0.2
-	BlockHeight1 = 0.8
+	BlockHeight1 = 0.4
 
 	BlockPosY0 = 0.
 	BlockPosY1 = 0.4
@@ -14,10 +14,11 @@ const (
 type BlockKind float32
 
 const (
-	BlockKindRegular BlockKind = 4
-	BlockKindHarder  BlockKind = 5
-	BlockKindHarder2 BlockKind = 6
-	BlockKindHeart   BlockKind = 7
+	BlockKindRegular     BlockKind = 4
+	BlockKindHarder      BlockKind = 5
+	BlockKindHarder2     BlockKind = 6
+	BlockKindHeart       BlockKind = 7
+	BlockKindGoldenHeart BlockKind = 8
 )
 
 type Block struct {
@@ -30,7 +31,7 @@ func newBlock(x, y, z, width, height float64, kind BlockKind) *Block {
 		width:  width,
 		height: height,
 		x:      x + width/2,
-		y:      height / 2,
+		y:      y + height/2,
 		z:      z,
 		kind:   kind,
 	}

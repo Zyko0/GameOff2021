@@ -21,11 +21,13 @@ const (
 )
 
 type BlockSettings struct {
-	MinBlocksSpawn                  int
-	MaxBlocksSpawn                  int
-	SpawnDistanceInterval           uint64
-	SpawnDepth                      float64
-	Regular, Harder, Harder2, Heart bool
+	MinBlocksSpawn                               int
+	MaxBlocksSpawn                               int
+	SpawnDistanceInterval                        uint64
+	SpawnDepth                                   float64
+	Regular, Harder, Harder2, Heart, GoldenHeart bool
+	HigherSpawn                                  bool
+	TallerBlocks                                 bool
 }
 
 type baseSettings struct {
@@ -34,7 +36,7 @@ type baseSettings struct {
 	SlowMotion            bool
 	HeartContainers       uint
 	PerfectStep           bool
-	DebugLines            bool
+	DebugLines            float32
 	CameraPosition        []float32
 	Circular              bool
 	PlayerSpeed           float64
@@ -46,11 +48,11 @@ type baseSettings struct {
 func newBaseSettings() *baseSettings {
 	return &baseSettings{
 		Action:                ActionNone,
-		HpToGameOver:          0, //TODO: just trolling
+		HpToGameOver:          0,
 		SlowMotion:            false,
 		HeartContainers:       3,
 		PerfectStep:           false,
-		DebugLines:            false,
+		DebugLines:            0.,
 		CameraPosition:        []float32{0, 0, -1.25},
 		Circular:              false,
 		PlayerSpeed:           0.01,
@@ -65,6 +67,9 @@ func newBaseSettings() *baseSettings {
 			Harder:                true,
 			Harder2:               true,
 			Heart:                 true,
+			GoldenHeart:           true,
+			HigherSpawn:           false,
+			TallerBlocks:          false,
 		},
 	}
 }
@@ -88,13 +93,15 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 	for _, a := range currentAugments {
 		switch a.ID {
 		case augments.IDDebugLines:
-			s.DebugLines = true
+			s.DebugLines = 1.
 		case augments.IDHighSpawn:
-			// TODO: higher spawn possible
+			s.BlockSettings.HigherSpawn = true
 		case augments.IDSlowMotion:
 			s.SlowMotion = true
 		case augments.IDHeartSpawn:
 			s.BlockSettings.Heart = true
+		case augments.IDGoldHeartSpawn:
+			s.BlockSettings.GoldenHeart = true
 		case augments.IDHeartContainer:
 			s.HeartContainers++
 			if s.HeartContainers > MaxHeartContainers {
@@ -106,12 +113,11 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.Circular = true
 		case augments.IDPerfectStep:
 			s.PerfectStep = true
-		case augments.IDOneMoreBlock:
+		case augments.IDMoreBlocks:
 			s.BlockSettings.MaxBlocksSpawn = 4
+			s.BlockSettings.MinBlocksSpawn = 3
 		case augments.IDTallerBlocks:
-			// TODO: taller blocks
-		case augments.IDTopView:
-			// TODO: let's see if we want to do that camera stuff, might break shader optimizations
+			s.BlockSettings.TallerBlocks = true
 		case augments.IDMoreSpawns:
 			s.BlockSettings.SpawnDistanceInterval = 70
 		case augments.IDEvenMoreSpawns:
@@ -120,10 +126,8 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.BlockSettings.SpawnDepth = 27 * 3 / 4
 		case augments.IDCloserSpawns2:
 			s.BlockSettings.SpawnDepth = 27 * 1 / 2
-		case augments.IDNothing, augments.IDNothing2:
-			// TODO: nothing
-		case augments.IDLessAugments:
-			s.AugmentsTicksInterval = logic.TPS * 40
+		case augments.IDNothing, augments.IDNothing2, augments.IDNothing3, augments.IDNothing4:
+			// Nothing
 		case augments.IDHarderBlocks:
 			s.BlockSettings.Harder = true
 		case augments.IDHarderBlocks2:

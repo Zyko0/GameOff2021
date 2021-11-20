@@ -19,6 +19,7 @@ const (
 	BlockHarderIndex = 5.
 	BlockHarder2Index = 6.
 	BlockHeartIndex = 7.
+	BlockGoldenHeartIndex = 8.
 	
 	MaxBlocks = 32.
 	MaxDepth = 30.
@@ -29,6 +30,7 @@ var PlayerPosition vec3
 var PlayerRadius float
 var Camera vec3
 var Distance float
+var DebugLines float
 
 var BlockCount float
 var BlockPositions [32]vec3
@@ -37,15 +39,28 @@ var BlockKinds [32]float
 var BlockSeeds [7]float
 
 // TODO: If this is too much uniform for a specific platform, can always hardcode these
-var PalettePlayer [4]vec4
-var PaletteBlock [4]vec4
-var PaletteRoad [4]vec4
-var PaletteBlockHarder [4]vec4
-var PaletteBlockHarder2 [4]vec4
-var PaletteHeart [4]vec4
+var PalettePlayer mat4
+var PaletteBlock mat4
+var PaletteRoad mat4
+var PaletteBlockHarder mat4
+var PaletteBlockHarder2 mat4
+var PaletteHeart mat4
+var PaletteGoldenHeart mat4
 
 func hash(p vec2, seed float) float { 
 	return fract(sin(dot(p, vec2(12.9898, 4.1414))) * 43758.5453 * seed)
+}
+
+func hashx(p vec2, seed float) float {
+	const scale = 10000.
+	
+	p *= scale*(1.+seed)
+	x := int(p.x)
+	y := int(p.y)
+	x = 0x3504f333*x*x + y
+	y = 0xf1bbcdcb*y*y + x
+	  
+	return float(x*y)*(2.0/(8589934592.0))+0.5
 }
 
 // https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83#generic-123-noise
@@ -61,9 +76,21 @@ func noise(p vec2, seed float) float {
 	return res*res
 }
 
+func noisex(p vec2, seed float) float {
+	ip := floor(p)
+	u := fract(p)
+	u = u*u*(3.0-2.0*u)
+	
+	res := mix(
+		mix(hashx(ip, seed), hashx(ip+vec2(1.,0.), seed), u.x),
+		mix(hashx(ip+vec2(0.,1.), seed), hashx(ip+vec2(1.,1.), seed), u.x), u.y)
+	
+	return res*res
+}
+
 func background(p vec2) vec3 {
 	space := vec3(0.01)
-	// TODO: this is not super great but whatever for now
+
 	if p.y < 0.03 {
 		po := p
 		dx := abs(p.x)
@@ -90,21 +117,22 @@ func background(p vec2) vec3 {
 	return space
 }
 
-func palette(t float, a, b, c, d vec4) vec3 {
+func palette(t float, pal mat4) vec3 {
 	var clr vec3
-	if t >= a.a && t <= b.a {
-		clr = mix(a.rgb*a.rgb, b.rgb*b.rgb, vec3((t-a.a)/(b.a-a.a)))
-	} else if t >= b.a && t <= c.a {
-		clr = mix(b.rgb*b.rgb, c.rgb*c.rgb, vec3((t-b.a)/(c.a-b.a)))
+	if t >= pal[0].a && t <= pal[1].a {
+		clr = mix(pal[0].rgb, pal[1].rgb, vec3((t-pal[0].a)/(pal[1].a-pal[0].a)))
+	} else if t >= pal[1].a && t <= pal[2].a {
+		clr = mix(pal[1].rgb, pal[2].rgb, vec3((t-pal[1].a)/(pal[2].a-pal[1].a)))
 	} else {
-		clr = mix(c.rgb*c.rgb, d.rgb*d.rgb, vec3((t-c.a)/(d.a-c.a)))
+		clr = mix(pal[2].rgb, pal[3].rgb, vec3((t-pal[2].a)/(pal[3].a-pal[2].a)))
 	}
 	clr = clr*clr*(3.0-2.0*clr)
-	return sqrt(clr)
+	
+	return clr*clr
 }
 
 func colorize(p vec3, t, index, seed float) vec3 {
-	var pal [4]vec4
+	var pal mat4
 
 	if index == PlayerIndex {
 		const scale = 16.
@@ -117,12 +145,15 @@ func colorize(p vec3, t, index, seed float) vec3 {
 		s = sin(PlayerPosition.x*8.)
 		c = cos(PlayerPosition.x*8.)
 		p.xy *= mat2(c, -s, s, c)
-		t = noise(p*scale, seed)
+		t = noisex(p.xy*scale, seed)
 		pal = PalettePlayer
 	} else if index == BlockIndex {
-		t = noise(p.xy*8., seed)
+		t = noisex(p.xy*8., seed)
 		pal = PaletteBlock
 	} else if index == RoadIndex {
+		if DebugLines > 0. && mod(abs(p.x)-0.2, 0.4) < 0.02 {
+			return vec3(0.)
+		}
 		p.z -= Distance
 		t = noise(p.xz*2., seed)
 		t *= (1+noise(p.xz*4., seed))
@@ -134,20 +165,24 @@ func colorize(p vec3, t, index, seed float) vec3 {
 		p /= p.z
 		return abs(vec3(p.z*0.25, 0., p.x))
 	} else if index == BlockHarderIndex {
-		t = noise(p.xy*8., seed)
+		t = noisex(p.xy*8., seed)
 		pal = PaletteBlockHarder
 	} else if index == BlockHarder2Index {
-		t = noise(p.xy*8., seed)
+		t = noisex(p.xy*8., seed)
 		pal = PaletteBlockHarder2
 	} else if index == BlockHeartIndex {
 		p = normalize(p)
 		y := -p.y-abs(p.x)
 		t = abs(sqrt(p.x*p.x+y*y) - 1.0)
-		// t = noise(p.xy*64., seed) // length(p.xy)-0.1 // noise(p.xy*8./5.)
 		pal = PaletteHeart
+	} else if index == BlockGoldenHeartIndex {
+		p = normalize(p)
+		y := -p.y-abs(p.x)
+		t = abs(sqrt(p.x*p.x+y*y) - 1.0)
+		pal = PaletteGoldenHeart
 	}
 	
-	return palette(t, pal[0], pal[1], pal[2], pal[3])
+	return palette(t, pal)
 }
 
 func translate(p, offset vec3) vec3 {
@@ -208,37 +243,37 @@ func sdBlock(p vec3, i float) mat3 {
 	bi := int(i)
 
 	bs := BlockSizes[bi]
-	blockOffset := vec3(0., 0., 0.)
+	seed := BlockSeeds[bi]
+	kind := BlockKinds[bi]
+	blockOffset := vec3(0.)
 	blockOffset = translate(blockOffset, BlockPositions[bi])
 
-	kind := BlockKinds[bi]
 	if kind == BlockIndex {
 		obj := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockIndex)
 		p = translate(p, obj[1].xyz)
-		c := 20.
-		obj[0].x -= noise(p.xy*c, BlockSeeds[bi])*p.z*0.2
+		obj[0].x -= noisex(p.xy*20., seed)*p.z*0.2
 		return obj
 	} else if kind == BlockHarderIndex {
 		obj := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarderIndex)
 		p = translate(p, obj[1].xyz)
-		c := 30.
-		obj[0].x -= noise(p.xy*c, BlockSeeds[bi])*p.z*0.2
+		obj[0].x -= noisex(p.xy*30., seed)*p.z*0.2
 		return obj
 	} else if kind == BlockHarder2Index {
 		obj := sdBox(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHarder2Index)
 		p = translate(p, obj[1].xyz)
-		c := 40.
-		obj[0].x -= noise(p.xy*c, BlockSeeds[bi])*p.z*0.2
+		obj[0].x -= noisex(p.xy*40., seed)*p.z*0.2
 		return obj
 	} else if kind == BlockHeartIndex {
 		return sdHeart(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHeartIndex)
+	} else if kind == BlockGoldenHeartIndex {
+		return sdHeart(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockGoldenHeartIndex)
 	}
 
 	return mat3(0.)
 }
 
 func minWithData(obj1, obj2 mat3) mat3 {
-	if obj2[0].x < obj1[0].x {
+	if abs(obj2[0].x) < abs(obj1[0].x) {
 		return obj2
 	}
 

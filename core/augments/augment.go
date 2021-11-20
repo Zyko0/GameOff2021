@@ -17,6 +17,7 @@ const (
 	IDNegateNextCost
 	IDHighSpawn
 	IDHeartSpawn
+	IDGoldHeartSpawn
 	IDSlowMotion
 	IDHeartContainer
 	// Legendary
@@ -25,23 +26,22 @@ const (
 	IDPerfectStep
 	IDRemoveLastNegative
 	// Negative
-	IDOneMoreBlock
+	IDMoreBlocks
 	IDTallerBlocks
-	IDTopView
 	IDMoreSpawns
 	IDEvenMoreSpawns
 	IDCloserSpawns
 	IDCloserSpawns2
 	IDNothing
 	IDNothing2
+	IDNothing3
+	IDNothing4
 	IDRemoveLastPositive
-	IDLessAugments
 	IDHarderBlocks
 	IDHarderBlocks2
 	IDNoRegularBlocks
 	// TODO: JumpLocked
 	// TODO: MovementLocked
-	// TODO: Drunk ? Offseted block positions ?
 
 	IDMax
 )

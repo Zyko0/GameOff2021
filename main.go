@@ -177,6 +177,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"PlayerRadius":   float32(g.core.Player.GetRadius()),
 				"Camera":         g.core.Settings.CameraPosition,
 				"Distance":       float32(g.core.Distance),
+				"DebugLines":     g.core.Settings.DebugLines,
 
 				"BlockCount":     float32(len(g.core.Blocks)),
 				"BlockPositions": g.cache.BlockPositions,
@@ -190,6 +191,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"PaletteBlockHarder":  graphics.PaletteBlockHarder,
 				"PaletteBlockHarder2": graphics.PaletteBlockHarder2,
 				"PaletteHeart":        graphics.PaletteHeart,
+				"PaletteGoldenHeart":  graphics.PaletteGoldenHeart,
 			},
 		})
 		// Draw HUD on offscreen

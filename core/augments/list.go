@@ -11,6 +11,7 @@ func init() {
 	List[IDNegateNextCost] = AugmentNegateNextCost
 	List[IDHighSpawn] = AugmentHighSpawn
 	List[IDHeartSpawn] = AugmentHeartSpawn
+	List[IDGoldHeartSpawn] = AugmentGoldHeartSpawn
 	List[IDSlowMotion] = AugmentSlowMotion
 	List[IDHeartContainer] = AugmentHeartContainer
 
@@ -19,17 +20,17 @@ func init() {
 	List[IDPerfectStep] = AugmentPerfectStep
 	List[IDRemoveLastNegative] = AugmentRemoveLastNegative
 
-	List[IDOneMoreBlock] = AugmentOneMoreBlock
+	List[IDMoreBlocks] = AugmentMoreBlocks
 	List[IDTallerBlocks] = AugmentTallerBlocks
-	List[IDTopView] = AugmentTopView
 	List[IDMoreSpawns] = AugmentMoreSpawns
 	List[IDEvenMoreSpawns] = AugmentEvenMoreSpawns
 	List[IDCloserSpawns] = AugmentCloserSpawns
 	List[IDCloserSpawns2] = AugmentCloserSpawns2
 	List[IDNothing] = AugmentNothing
 	List[IDNothing2] = AugmentNothing2
+	List[IDNothing3] = AugmentNothing3
+	List[IDNothing4] = AugmentNothing4
 	List[IDRemoveLastPositive] = AugmentRemoveLastPositive
-	List[IDLessAugments] = AugmentLessAugments
 	List[IDHarderBlocks] = AugmentHarderBlocks
 	List[IDHarderBlocks2] = AugmentHarderBlocks2
 	List[IDNoRegularBlocks] = AugmentNoRegularBlocks
@@ -119,6 +120,20 @@ var (
 			Value: 1,
 		},
 	}
+	AugmentGoldHeartSpawn = &Augment{
+		ID:          IDGoldHeartSpawn,
+		Name:        "Golden hearts",
+		Description: "These hearts give you 2HP back.",
+		Stackable:   false,
+		Rarity:      RarityEpic,
+		cost: Cost{
+			Kind:  CostHP,
+			Value: 0,
+		},
+		Constraints: []ID{
+			IDHeartSpawn,
+		},
+	}
 	AugmentSlowMotion = &Augment{
 		ID:          IDSlowMotion,
 		Name:        "Lag",
@@ -196,8 +211,8 @@ var (
 
 var (
 	// Negative
-	AugmentOneMoreBlock = &Augment{
-		ID:          IDOneMoreBlock,
+	AugmentMoreBlocks = &Augment{
+		ID:          IDMoreBlocks,
 		Name:        "More blocks",
 		Description: "Wait, this game was designed with 3 blocks per spawn at maximum...",
 		Stackable:   false,
@@ -211,17 +226,6 @@ var (
 		ID:          IDTallerBlocks,
 		Name:        "Taller blocks",
 		Description: "Some blocks are taller than the other, how is this supposed to make it harder without a jump ?",
-		Stackable:   false,
-		Rarity:      RarityNegative,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
-		},
-	}
-	AugmentTopView = &Augment{
-		ID:          IDTopView,
-		Name:        "Top view",
-		Description: "The camera is now positionned on top, this is usefull for debugging purposes.",
 		Stackable:   false,
 		Rarity:      RarityNegative,
 		cost: Cost{
@@ -294,7 +298,7 @@ var (
 		ID:          IDNothing2,
 		Name:        "Nothing II",
 		Description: "",
-		Stackable:   true,
+		Stackable:   false,
 		Rarity:      RarityNegative,
 		cost: Cost{
 			Kind:  CostHP,
@@ -304,21 +308,38 @@ var (
 			IDNothing,
 		},
 	}
+	AugmentNothing3 = &Augment{
+		ID:          IDNothing3,
+		Name:        "Nothing III",
+		Description: "",
+		Stackable:   false,
+		Rarity:      RarityNegative,
+		cost: Cost{
+			Kind:  CostHP,
+			Value: 3,
+		},
+		Constraints: []ID{
+			IDNothing2,
+		},
+	}
+	AugmentNothing4 = &Augment{
+		ID:          IDNothing4,
+		Name:        "Nothing IV",
+		Description: "",
+		Stackable:   true,
+		Rarity:      RarityNegative,
+		cost: Cost{
+			Kind:  CostHP,
+			Value: 4,
+		},
+		Constraints: []ID{
+			IDNothing3,
+		},
+	}
 	AugmentRemoveLastPositive = &Augment{
 		ID:          IDRemoveLastPositive,
 		Name:        "Broken feature",
 		Description: "Sorry about that, it might break the last abusive bug, but hey it's a fix !",
-		Stackable:   true,
-		Rarity:      RarityNegative,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
-		},
-	}
-	AugmentLessAugments = &Augment{
-		ID:          IDLessAugments,
-		Name:        "Less bugs",
-		Description: "We are getting closer to a clean build, bugs will show less often, people don't like bugs, right ?",
 		Stackable:   true,
 		Rarity:      RarityNegative,
 		cost: Cost{

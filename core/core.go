@@ -13,12 +13,12 @@ const (
 	RoadHeight = 1.
 	RoadDepth  = 4.
 
-	DefaultSpeed = 1.
+	DefaultSpeed = 2.
 	InvulnTime   = 30
 
 	BlockDefaultSpeed = 0.075
 
-	HeartChance = 0.075 // Let's make it possible to farm them
+	HeartChance = 0.075 // Let's keep it possible to farm them
 )
 
 type Core struct {
@@ -43,7 +43,7 @@ type Core struct {
 func NewCore() *Core {
 	seeds := make([]float32, 7)
 	for i := range seeds {
-		seeds[i] = rand.Float32()
+		seeds[i] = 0.5 + rand.Float32()*0.5
 	}
 	c := &Core{
 		tick:            0,
@@ -68,24 +68,18 @@ func NewCore() *Core {
 }
 
 func spawnBlocks(settings *BlockSettings) []*Block {
-	blockCount := settings.MinBlocksSpawn + rand.Intn(settings.MaxBlocksSpawn-settings.MinBlocksSpawn)
+	blockCount := settings.MinBlocksSpawn + rand.Intn(settings.MaxBlocksSpawn-settings.MinBlocksSpawn+1)
 	blocks := make([]*Block, blockCount)
 	indices := []int{0, 1, 2, 3, 4}
 	for i := 0; i < blockCount; i++ {
-		width := BlockWidth0
-		// TODO: handle 2nd height ?
-		height := BlockHeight0
-
-		idx := rand.Intn(len(indices))
-		x := float64(indices[idx]) * width
-		indices[idx] = indices[len(indices)-1]
-		indices = indices[:len(indices)-1]
-
 		kind := BlockKindRegular
 		rng := rand.Float32()
 		switch {
 		case settings.Heart && rng < HeartChance:
 			kind = BlockKindHeart
+			if settings.GoldenHeart && rand.Intn(2) == 0 {
+				kind = BlockKindGoldenHeart
+			}
 		case settings.Harder2 && rng < HeartChance+0.3:
 			kind = BlockKindHarder2
 		case settings.Harder && rng < HeartChance+0.6:
@@ -94,7 +88,26 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 			kind = BlockKindHarder
 		}
 
-		blocks[i] = newBlock(x, 0, settings.SpawnDepth, width, height, kind)
+		width := BlockWidth0
+		// TODO: handle 2nd height ?
+		// TODO: if it's an actual block
+		height := BlockHeight0
+		taller := settings.TallerBlocks && rand.Intn(2) == 0
+		if taller && kind != BlockKindHeart {
+			height = BlockHeight1
+		}
+		y := 0.
+		higher := !taller && settings.HigherSpawn && rand.Intn(2) == 0
+		if higher {
+			y = BlockHeight0
+		}
+
+		idx := rand.Intn(len(indices))
+		x := float64(indices[idx]) * width
+		indices[idx] = indices[len(indices)-1]
+		indices = indices[:len(indices)-1]
+
+		blocks[i] = newBlock(x, y, settings.SpawnDepth, width, height, kind)
 	}
 
 	return blocks
@@ -137,15 +150,16 @@ func (c *Core) Update() {
 	dz := -(c.Speed * BlockDefaultSpeed)
 	for _, b := range c.Blocks {
 		// If there's a depth hit and not in an invulnerability frame, check for damage loss
-		if c.invulnTime <= 0 {
+		if c.invulnTime <= 0 || (b.kind == BlockKindHeart || b.kind == BlockKindGoldenHeart) {
 			// Check z intersection
 			if collides, tdz := internal.DepthCollisionPlayerTest(c.Player, b, dz); collides {
 				switch b.kind {
 				case BlockKindHeart:
 					assets.PlayHeartSound()
-					if c.PlayerHP < int(c.Settings.HeartContainers) {
-						c.PlayerHP++
-					}
+					c.PlayerHP++
+				case BlockKindGoldenHeart:
+					assets.PlayHeartSound()
+					c.PlayerHP += 2
 				case BlockKindRegular:
 					assets.PlayHitSound()
 					c.PlayerHP--
@@ -153,7 +167,7 @@ func (c *Core) Update() {
 					// TODO: Make a different sound
 					assets.PlayHitSound()
 					c.PlayerHP -= 2
-				default:
+				case BlockKindHarder2:
 					// TODO: Make a different sound
 					assets.PlayHitSound()
 					c.PlayerHP -= 3
@@ -162,6 +176,9 @@ func (c *Core) Update() {
 				// If we know the player is dead, let's adjust the distance of all blocks
 				if c.PlayerHP <= c.Settings.defaultSettings.HpToGameOver {
 					dz = tdz
+				}
+				if c.PlayerHP > int(c.Settings.HeartContainers) {
+					c.PlayerHP = int(c.Settings.HeartContainers)
 				}
 				break
 			}

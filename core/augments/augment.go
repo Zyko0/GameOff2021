@@ -12,19 +12,18 @@ type ID byte
 const (
 	// Common
 	IDDebugLines ID = iota
-	IDFreeRoll
+	IDFreeRoll // TODO: Useless
 	// Epic
-	IDNegateNextCost
-	IDHighSpawn
+	IDNegateNextCost // TODO: Useless, almost no cost on augments anymore
+	IDHighSpawn // TODO: Not sure this is even a bonus or not
 	IDHeartSpawn
 	IDGoldHeartSpawn
-	IDSlowMotion
+	IDSlowMotion // ?
 	IDHeartContainer
 	// Legendary
 	IDNegativeHearts
-	IDCircular
+	IDCircular // TODO: Not sure it's even a bonus
 	IDPerfectStep
-	IDRemoveLastNegative
 	// Negative
 	IDMoreBlocks
 	IDTallerBlocks
@@ -36,12 +35,12 @@ const (
 	IDNothing2
 	IDNothing3
 	IDNothing4
-	IDRemoveLastPositive
 	IDHarderBlocks
 	IDHarderBlocks2
 	IDNoRegularBlocks
-	// TODO: JumpLocked
-	// TODO: MovementLocked
+	// TODO: JumpFix "blabla not the kind of fix you expect" => jump speed depends on game's speed
+	// TODO: charging beam on Z axis ? One shots ? 1hp ?
+	// TODO: Hole rectangle block on Y=0 - width=1.
 
 	IDMax
 )

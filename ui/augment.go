@@ -13,6 +13,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
+type AugmentViewStep byte
+
+const (
+	AugmentStepNegative AugmentViewStep = iota
+	AugmentStepPositive
+)
+
 const (
 	augmentOffsetX = float32(logic.ScreenWidth-logic.GameSquareDim) / 2
 
@@ -42,6 +49,7 @@ var (
 )
 
 type AugmentView struct {
+	step   AugmentViewStep
 	active bool
 
 	lastCursorX int
@@ -69,6 +77,7 @@ func NewAugmentView() *AugmentView {
 	})
 
 	return &AugmentView{
+		step:   AugmentStepNegative,
 		active: false,
 
 		card: card,
@@ -79,8 +88,17 @@ func NewAugmentView() *AugmentView {
 }
 
 func (av *AugmentView) Reset() {
+	av.step = AugmentStepNegative
 	av.active = false
 	av.SelectedIndex = 0
+}
+
+func (av *AugmentView) SetStep(step AugmentViewStep) {
+	av.step = step
+}
+
+func (av *AugmentView) GetStep() AugmentViewStep {
+	return av.step
 }
 
 func (av *AugmentView) Active() bool {
@@ -135,13 +153,16 @@ func (av *AugmentView) Update() {
 	}
 
 	// Check if a selection is made
+	var validated bool
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
-		av.active = false
+		validated = true
 	} else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && hovered {
-		av.active = false
+		validated = true
 	}
-	if !av.active {
+	if validated {
 		ebiten.SetCursorMode(ebiten.CursorModeHidden)
+		av.active = false
 	}
 
 	av.lastCursorX, av.lastCursorY = x, y

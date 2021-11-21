@@ -138,8 +138,9 @@ func colorize(p vec3, t, index, seed float) vec3 {
 		const scale = 16.
 
 		// Y Rotation
-		s := sin(Distance*2.)
-		c := cos(Distance*2.)
+		dz := Distance*4.
+		s := sin(dz)
+		c := cos(dz)
 		p.yz *= -mat2(c, s, -s, c)
 		// X Rotation
 		s = sin(PlayerPosition.x*8.)

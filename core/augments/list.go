@@ -18,7 +18,6 @@ func init() {
 	List[IDNegativeHearts] = AugmentNegativeHearts
 	List[IDCircular] = AugmentCircular
 	List[IDPerfectStep] = AugmentPerfectStep
-	List[IDRemoveLastNegative] = AugmentRemoveLastNegative
 
 	List[IDMoreBlocks] = AugmentMoreBlocks
 	List[IDTallerBlocks] = AugmentTallerBlocks
@@ -30,7 +29,6 @@ func init() {
 	List[IDNothing2] = AugmentNothing2
 	List[IDNothing3] = AugmentNothing3
 	List[IDNothing4] = AugmentNothing4
-	List[IDRemoveLastPositive] = AugmentRemoveLastPositive
 	List[IDHarderBlocks] = AugmentHarderBlocks
 	List[IDHarderBlocks2] = AugmentHarderBlocks2
 	List[IDNoRegularBlocks] = AugmentNoRegularBlocks
@@ -182,31 +180,24 @@ var (
 		Rarity:      RarityLegendary,
 		cost: Cost{
 			Kind:  CostHP,
-			Value: 1,
+			Value: 0,
 		},
 	}
 	AugmentPerfectStep = &Augment{
 		ID:          IDPerfectStep,
 		Name:        "Perfect Step",
-		Description: "The sphere now steps exactly from a row to another, broken TODO: really broken",
+		Description: "The sphere now steps exactly from a row to another, we needed an easy mode for devs.",
 		Stackable:   false,
 		Rarity:      RarityLegendary,
 		cost: Cost{
 			Kind:  CostHP,
-			Value: 3, // TODO: Maybe I add this but make it cost a lot of hp ?
+			Value: 0, // TODO: Maybe I add this but make it cost a lot of hp ?
+		},
+		Constraints: []ID{
+			IDDebugLines,
 		},
 	}
-	AugmentRemoveLastNegative = &Augment{
-		ID:          IDRemoveLastNegative,
-		Name:        "Bug fix",
-		Description: "Okay the last negative bug you encountered is now fixed.",
-		Stackable:   true,
-		Rarity:      RarityEpic,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
-		},
-	}
+	// TODO: PerfectStepY ? For jump and Y axis
 )
 
 var (
@@ -334,17 +325,6 @@ var (
 		},
 		Constraints: []ID{
 			IDNothing3,
-		},
-	}
-	AugmentRemoveLastPositive = &Augment{
-		ID:          IDRemoveLastPositive,
-		Name:        "Broken feature",
-		Description: "Sorry about that, it might break the last abusive bug, but hey it's a fix !",
-		Stackable:   true,
-		Rarity:      RarityNegative,
-		cost: Cost{
-			Kind:  CostNone,
-			Value: 0,
 		},
 	}
 	AugmentHarderBlocks = &Augment{

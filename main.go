@@ -91,11 +91,11 @@ func (g *Game) Update() error {
 		return nil
 	}
 	// Augments management => if eligible for an augment, show view
-	// TODO: first at 1000 ?
-	if g.core.GetTicks()%g.core.Settings.AugmentsTicksInterval == 0 {
+	if g.core.IsWaveOver() {
 		// If needs an augment selection but the view is not active yet, roll, activate and abort
 		if !g.augmentView.Active() {
-			rolls := g.augmentManager.RollAugments()
+			negative := g.augmentView.GetStep() == ui.AugmentStepNegative
+			rolls := g.augmentManager.RollAugments(g.core.Wave.Number, negative)
 			g.augmentView.SetAugments(rolls)
 			return nil
 		}
@@ -109,7 +109,7 @@ func (g *Game) Update() error {
 		a := g.augmentView.Augments[g.augmentView.SelectedIndex]
 		// Special check for augment re-roll
 		if a.ID == augments.IDFreeRoll {
-			rolls := g.augmentManager.RollAugments()
+			rolls := g.augmentManager.RollAugments(g.core.Wave.Number, false)
 			g.augmentView.SetAugments(rolls)
 			return nil
 		}
@@ -118,6 +118,13 @@ func (g *Game) Update() error {
 		g.core.Settings.ApplyAugments(g.augmentManager.CurrentAugments)
 		if cost.Kind == augments.CostHP {
 			g.core.PlayerHP -= cost.Value
+		}
+		// If the 2nd positive augment has been taken, then start next wave
+		if a.Rarity != augments.RarityNegative {
+			g.core.StartNextWave()
+			g.augmentView.Reset()
+		} else {
+			g.augmentView.SetStep(ui.AugmentStepPositive)
 		}
 	}
 	// Require a draw
@@ -138,11 +145,11 @@ func (g *Game) Update() error {
 		g.core.Player.SetIntentJump(true)
 	}
 	// Move player right
-	if kpd := inpututil.KeyPressDuration(ebiten.KeyRight); kpd > 0 {
+	if kpd := inpututil.KeyPressDuration(ebiten.KeyRight); (!g.core.Settings.PerfectStep && kpd > 0) || kpd == 1 {
 		g.core.Player.SetIntentX(1)
 	}
 	// Move player left
-	if kpd := inpututil.KeyPressDuration(ebiten.KeyLeft); kpd > 0 {
+	if kpd := inpututil.KeyPressDuration(ebiten.KeyLeft); (!g.core.Settings.PerfectStep && kpd > 0) || kpd == 1 {
 		g.core.Player.SetIntentX(-1)
 	}
 	// Game update
@@ -176,7 +183,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
 				"PlayerRadius":   float32(g.core.Player.GetRadius()),
 				"Camera":         g.core.Settings.CameraPosition,
-				"Distance":       float32(g.core.Distance),
+				"Distance":       float32(g.core.Wave.Distance),
 				"DebugLines":     g.core.Settings.DebugLines,
 
 				"BlockCount":     float32(len(g.core.Blocks)),
@@ -221,16 +228,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	// Debug
 	// TODO: this debug took 17sec out of 120sec which is pretty huge
-	str := fmt.Sprintf("TPS %.2f - FPS %.2f - Tick %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f - PY %.2f",
+	str := fmt.Sprintf("TPS %.2f - FPS %.2f - Wave %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
 		ebiten.CurrentTPS(),
 		ebiten.CurrentFPS(),
-		g.core.GetTicks(),
+		g.core.Wave.Number,
 		len(g.core.Blocks),
 		g.core.GetScore(),
 		g.core.GetSpeed(),
 		g.core.PlayerHP,
-		g.core.Distance,
-		g.core.Player.GetY(),
+		g.core.Wave.Distance,
 	)
 	text.Draw(screen, str, assets.CardBodyDescriptionTextFontFace, 0, 20, color.RGBA{255, 255, 255, 255})
 }

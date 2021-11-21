@@ -42,6 +42,7 @@ type baseSettings struct {
 	PlayerSpeed           float64
 	PlayerSpeedModifier   float64
 	AugmentsTicksInterval uint64
+	EndWaveDistance       float64
 	BlockSettings         BlockSettings
 }
 
@@ -53,21 +54,22 @@ func newBaseSettings() *baseSettings {
 		HeartContainers:       3,
 		PerfectStep:           false,
 		DebugLines:            0.,
-		CameraPosition:        []float32{0, 0, -1.25},
+		CameraPosition:        []float32{0, -0.2, -1.15},
 		Circular:              false,
 		PlayerSpeed:           0.01,
 		PlayerSpeedModifier:   1.,
 		AugmentsTicksInterval: logic.TPS * 20,
+		EndWaveDistance:       150.,
 		BlockSettings: BlockSettings{
-			MinBlocksSpawn:        2,
-			MaxBlocksSpawn:        3,
+			MinBlocksSpawn:        3,
+			MaxBlocksSpawn:        4,
 			SpawnDistanceInterval: 80,
 			SpawnDepth:            27,
 			Regular:               true,
-			Harder:                true,
-			Harder2:               true,
-			Heart:                 true,
-			GoldenHeart:           true,
+			Harder:                false,
+			Harder2:               false,
+			Heart:                 false,
+			GoldenHeart:           false,
 			HigherSpawn:           false,
 			TallerBlocks:          false,
 		},

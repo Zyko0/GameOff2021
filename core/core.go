@@ -5,7 +5,6 @@ import (
 
 	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/core/internal"
-	"github.com/Zyko0/GameOff2021/logic"
 )
 
 const (
@@ -13,8 +12,7 @@ const (
 	RoadHeight = 1.
 	RoadDepth  = 4.
 
-	DefaultSpeed = 2.
-	InvulnTime   = 30
+	InvulnTime = 30
 
 	BlockDefaultSpeed = 0.075
 
@@ -22,19 +20,14 @@ const (
 )
 
 type Core struct {
-	tick            uint64
-	intSpeed        uint64
-	prevIntDistance uint64
-	intDistance     uint64
-
-	blockSeeds []float32
+	tick uint64
 
 	invulnTime int
+	blockSeeds []float32
 	score      uint64
 
+	Wave     *Wave
 	PlayerHP int
-	Speed    float64
-	Distance float64
 	Player   *Player
 	Blocks   []*Block
 	Settings *Settings
@@ -45,20 +38,16 @@ func NewCore() *Core {
 	for i := range seeds {
 		seeds[i] = 0.5 + rand.Float32()*0.5
 	}
+
 	c := &Core{
-		tick:            0,
-		intSpeed:        1,
-		prevIntDistance: 0,
-		intDistance:     0,
+		tick: 0,
 
 		blockSeeds: seeds,
-
 		invulnTime: 0,
 		score:      0,
 
+		Wave:     newWave(0),
 		PlayerHP: 3,
-		Speed:    DefaultSpeed,
-		Distance: 0,
 		Player:   NewPlayer(),
 		Blocks:   []*Block{},
 		Settings: newSettings(),
@@ -89,11 +78,10 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 		}
 
 		width := BlockWidth0
-		// TODO: handle 2nd height ?
-		// TODO: if it's an actual block
 		height := BlockHeight0
 		taller := settings.TallerBlocks && rand.Intn(2) == 0
-		if taller && kind != BlockKindHeart {
+		// TODO: ignore taller hearts here
+		if taller && kind != BlockKindHeart && kind != BlockKindGoldenHeart {
 			height = BlockHeight1
 		}
 		y := 0.
@@ -117,28 +105,44 @@ func (c *Core) Update() {
 	// Update player's jump
 	c.Player.jump.Update(c.Player.intentJump)
 	// Update player on X axis
+	// TODO: below code is trash, but just making it work for now
 	if c.Player.intentX != 0 {
-		// TODO: let's multiply player speed by (1+(1-gamespeed)/4) arbitrarily
-		pSpeed := c.Settings.PlayerSpeed * c.Settings.PlayerSpeedModifier * (1 + (c.Speed - 1.))
-		dx := c.Player.intentX * pSpeed
-		// Check collisions with a wall
-		if diff := c.Player.x + dx - c.Player.radius; diff < 0 {
-			dx -= diff
-			if c.Settings.Circular {
-				dx = (1 - c.Player.radius) - c.Player.x
+		if c.Settings.PerfectStep {
+			c.Player.x += c.Player.intentX * 0.2
+			if c.Player.x <= 0 {
+				c.Player.x = 0.1
+				if c.Settings.Circular {
+					c.Player.x = 0.9
+				}
 			}
-		} else if diff := c.Player.x + dx + c.Player.radius; diff > 1 {
-			dx -= (diff - 1)
-			if c.Settings.Circular {
-				dx = -c.Player.x + c.Player.radius
+			if c.Player.x >= 1 {
+				c.Player.x = 0.9
+				if c.Settings.Circular {
+					c.Player.x = 0.1
+				}
 			}
+		} else {
+			pSpeed := c.Settings.PlayerSpeed * c.Settings.PlayerSpeedModifier * (1 + (c.Wave.Speed - 1.))
+			dx := c.Player.intentX * pSpeed
+			// Check collisions with a wall
+			if diff := c.Player.x + dx - c.Player.radius; diff < 0 {
+				dx -= diff
+				if c.Settings.Circular {
+					dx = (1 - c.Player.radius) - c.Player.x
+				}
+			} else if diff := c.Player.x + dx + c.Player.radius; diff > 1 {
+				dx -= (diff - 1)
+				if c.Settings.Circular {
+					dx = -c.Player.x + c.Player.radius
+				}
+			}
+			c.Player.x += dx
 		}
-		c.Player.x += dx
 	}
 	// Every distance interval, spawn some blocks
 	// TODO: trying on distance but broken yet
-	distMod := c.intDistance % uint64(float64(c.Settings.BlockSettings.SpawnDistanceInterval)/c.Speed)
-	if distMod == 0 {
+	distMod := c.Wave.IntDistance % uint64(float64(c.Settings.BlockSettings.SpawnDistanceInterval)/c.Wave.Speed)
+	if c.Wave.Distance < c.Settings.EndWaveDistance && distMod == 0 {
 		blocks := spawnBlocks(&c.Settings.BlockSettings)
 		c.Blocks = append(c.Blocks, blocks...)
 	}
@@ -147,7 +151,7 @@ func (c *Core) Update() {
 		c.invulnTime--
 	}
 	// Check collisions for blocks
-	dz := -(c.Speed * BlockDefaultSpeed)
+	dz := -(c.Wave.Speed * BlockDefaultSpeed)
 	for _, b := range c.Blocks {
 		// If there's a depth hit and not in an invulnerability frame, check for damage loss
 		if c.invulnTime <= 0 || (b.kind == BlockKindHeart || b.kind == BlockKindGoldenHeart) {
@@ -199,13 +203,16 @@ func (c *Core) Update() {
 	}
 
 	c.tick++
-	c.intDistance += 1 // c.intSpeed
-	c.Distance += (c.Speed * BlockDefaultSpeed)
-	// Every 10 seconds, increase global speed
-	if c.tick%(logic.TPS*10) == 0 {
-		c.Speed += 0.5 // TODO: need a higher base speed, and additional speed here as well
-		c.intSpeed += 1
-	}
+	c.Wave.Update()
+}
+
+func (c *Core) IsWaveOver() bool {
+	// just to wait a bit before next wave transition
+	return c.Wave.Distance > c.Settings.EndWaveDistance+c.Settings.BlockSettings.SpawnDepth+1
+}
+
+func (c *Core) StartNextWave() {
+	c.Wave = newWave(c.Wave.Number + 1)
 }
 
 func (c *Core) GetBlockSeeds() []float32 {
@@ -213,11 +220,11 @@ func (c *Core) GetBlockSeeds() []float32 {
 }
 
 func (c *Core) GetSpeed() float64 {
-	return c.Speed
+	return c.Wave.Speed
 }
 
 func (c *Core) GetScore() uint64 {
-	return uint64(c.Distance)
+	return uint64(c.Wave.Distance)
 }
 
 func (c *Core) GetTicks() uint64 {

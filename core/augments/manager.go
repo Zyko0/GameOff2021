@@ -33,7 +33,7 @@ func (m *Manager) Reset() {
 	m.CurrentAugments = m.CurrentAugments[:0]
 }
 
-func (am *Manager) generatePossibleAugments() {
+func (am *Manager) generatePossibleAugments(waveNumber int) {
 	am.possibleAugmentsCommon = am.possibleAugmentsCommon[:0]
 	am.possibleAugmentsEpic = am.possibleAugmentsEpic[:0]
 	am.possibleAugmentsLegendary = am.possibleAugmentsLegendary[:0]
@@ -57,7 +57,10 @@ func (am *Manager) generatePossibleAugments() {
 		}
 		// Hard fixes
 		switch a.ID {
-
+		case IDPerfectStep:
+			if waveNumber < 5 {
+				continue
+			}
 		}
 		// Add and order by rarity
 		switch a.Rarity {
@@ -90,16 +93,13 @@ func (am *Manager) rollAugments(possible []*Augment) []*Augment {
 	return rolls
 }
 
-func (am *Manager) RollAugments() []*Augment {
-	am.generatePossibleAugments()
+func (am *Manager) RollAugments(waveNumber int, negative bool) []*Augment {
+	am.generatePossibleAugments(waveNumber)
 
-	rarity := rand.Float64()
-	// Return negative rolls
-	if rarity < NegativeRarityPercent {
+	if negative {
 		return am.rollAugments(am.possibleAugmentsNegative)
 	}
-	// Return positive rolls
-	rarity = rand.Float64()
+	rarity := rand.Float64()
 	switch {
 	case rarity < LegendaryRarityPercent:
 		return am.rollAugments(am.possibleAugmentsLegendary)
@@ -117,34 +117,6 @@ func (am *Manager) AddAugment(augment *Augment) Cost {
 			Kind: CostNone,
 		}
 		am.RemoveAugment(negCostAugment)
-	}
-	// Hard check for the removal of last negative augment
-	if augment.ID == IDRemoveLastNegative {
-		var last *Augment
-		for i := len(am.CurrentAugments) - 1; i > 0; i-- {
-			if am.CurrentAugments[i].Rarity == RarityNegative {
-				last = am.CurrentAugments[i]
-				break
-			}
-		}
-		if last != nil {
-			am.RemoveAugment(last)
-		}
-		return cost
-	}
-	// Hard check for the removal of last positive augment
-	if augment.ID == IDRemoveLastNegative {
-		var last *Augment
-		for i := len(am.CurrentAugments) - 1; i > 0; i-- {
-			if am.CurrentAugments[i].Rarity == RarityNegative {
-				last = am.CurrentAugments[i]
-				break
-			}
-		}
-		if last != nil {
-			am.RemoveAugment(last)
-		}
-		return cost
 	}
 	// Add augment
 	am.currentAugmentsByID[augment.ID] = augment

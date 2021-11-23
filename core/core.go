@@ -16,7 +16,7 @@ const (
 
 	BlockDefaultSpeed = 0.075
 
-	HeartChance = 0.075 // Let's keep it possible to farm them
+	HeartChance = 0.05 // Let's keep it possible to farm them
 )
 
 type Core struct {
@@ -62,19 +62,33 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 	indices := []int{0, 1, 2, 3, 4}
 	for i := 0; i < blockCount; i++ {
 		kind := BlockKindRegular
-		rng := rand.Float32()
+		r := rand.Float32()
 		switch {
-		case settings.Heart && rng < HeartChance:
+		case settings.Heart && r < HeartChance:
 			kind = BlockKindHeart
 			if settings.GoldenHeart && rand.Intn(2) == 0 {
 				kind = BlockKindGoldenHeart
 			}
-		case settings.Harder2 && rng < HeartChance+0.3:
-			kind = BlockKindHarder2
-		case settings.Harder && rng < HeartChance+0.6:
-			kind = BlockKindHarder
-		case !settings.Regular:
-			kind = BlockKindHarder
+		default:
+			r = rand.Float32()
+			switch {
+			case settings.Harder2 && r < 1./4.:
+				kind = BlockKindHarder2
+			case settings.Harder && r < 2./4.:
+				kind = BlockKindHarder
+			default:
+				r = rand.Float32()
+				switch {
+				case settings.ChargingBeam && r < 1./4.:
+					kind = BlockKindChargingBeam
+				case settings.LateralHole && r < 2./4.:
+					// kind = BlockKindLateralHole
+				case settings.LongHole && r < 3./4.:
+					// kind = BlockKindLongHole
+				case !settings.Regular:
+					kind = BlockKindHarder
+				}
+			}
 		}
 
 		width := BlockWidth0
@@ -142,7 +156,7 @@ func (c *Core) Update() {
 	// Every distance interval, spawn some blocks
 	// TODO: trying on distance but broken yet
 	distMod := c.Wave.IntDistance % uint64(float64(c.Settings.BlockSettings.SpawnDistanceInterval)/c.Wave.Speed)
-	if c.Wave.Distance < c.Settings.EndWaveDistance && distMod == 0 {
+	if (c.Wave.Endless() || c.Wave.Distance < c.Settings.EndWaveDistance) && distMod == 0 {
 		blocks := spawnBlocks(&c.Settings.BlockSettings)
 		c.Blocks = append(c.Blocks, blocks...)
 	}
@@ -175,7 +189,15 @@ func (c *Core) Update() {
 					// TODO: Make a different sound
 					assets.PlayHitSound()
 					c.PlayerHP -= 3
+				case BlockKindChargingBeam:
+					if b.width < 0.2 {
+						// Skip a non-charged laser beam
+						continue
+					}
+					assets.PlayHitSound()
+					c.PlayerHP -= 3
 				}
+
 				c.invulnTime = InvulnTime
 				// If we know the player is dead, let's adjust the distance of all blocks
 				if c.PlayerHP <= c.Settings.defaultSettings.HpToGameOver {
@@ -190,12 +212,25 @@ func (c *Core) Update() {
 	}
 	// Update blocks
 	for _, b := range c.Blocks {
-		b.z += dz
+		if b.kind == BlockKindChargingBeam {
+			b.width += 0.001
+		} else {
+			b.z += dz
+		}
 	}
-	// Remove any blocks that have fallen off the screen
+	// Remove any dead blocks
 	for i := 0; i < len(c.Blocks); i++ {
+		var dead bool
+
 		b := c.Blocks[i]
+		// Fallen off the screen
 		if b.z < 2. {
+			dead = true
+		} else if b.kind == BlockKindChargingBeam && b.width >= 0.2 {
+			// Charging beam finished charging
+			dead = true
+		}
+		if dead {
 			c.Blocks[i] = c.Blocks[len(c.Blocks)-1]
 			c.Blocks = c.Blocks[:len(c.Blocks)-1]
 			i--
@@ -207,8 +242,7 @@ func (c *Core) Update() {
 }
 
 func (c *Core) IsWaveOver() bool {
-	// just to wait a bit before next wave transition
-	return c.Wave.Distance > c.Settings.EndWaveDistance+c.Settings.BlockSettings.SpawnDepth+1
+	return !c.Wave.Endless() && (c.Wave.Distance > c.Settings.EndWaveDistance+c.Settings.BlockSettings.SpawnDepth+1)
 }
 
 func (c *Core) StartNextWave() {

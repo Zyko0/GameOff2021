@@ -110,19 +110,9 @@ func (am *Manager) RollAugments(waveNumber int, negative bool) []*Augment {
 	}
 }
 
-func (am *Manager) AddAugment(augment *Augment) Cost {
-	cost := augment.cost
-	if negCostAugment := am.currentAugmentsByID[IDNegateNextCost]; negCostAugment != nil {
-		cost = Cost{
-			Kind: CostNone,
-		}
-		am.RemoveAugment(negCostAugment)
-	}
-	// Add augment
+func (am *Manager) AddAugment(augment *Augment) {
 	am.currentAugmentsByID[augment.ID] = augment
 	am.CurrentAugments = append(am.CurrentAugments, augment)
-
-	return cost
 }
 
 func (am *Manager) RemoveAugment(augment *Augment) {

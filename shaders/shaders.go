@@ -20,6 +20,9 @@ const (
 	BlockHarder2Index = 6.
 	BlockHeartIndex = 7.
 	BlockGoldenHeartIndex = 8.
+	BlockLateralHoleIndex = 9.
+	BlockLongHoleIndex = 10.
+	BlockChargingBeamIndex = 11.
 	
 	MaxBlocks = 32.
 	MaxDepth = 30.
@@ -46,6 +49,7 @@ var PaletteBlockHarder mat4
 var PaletteBlockHarder2 mat4
 var PaletteHeart mat4
 var PaletteGoldenHeart mat4
+var PaletteChargingBeam mat4
 
 func hash(p vec2, seed float) float { 
 	return fract(sin(dot(p, vec2(12.9898, 4.1414))) * 43758.5453 * seed)
@@ -174,13 +178,15 @@ func colorize(p vec3, t, index, seed float) vec3 {
 	} else if index == BlockHeartIndex {
 		p = normalize(p)
 		y := -p.y-abs(p.x)
-		t = abs(sqrt(p.x*p.x+y*y) - 1.0)
+		t = abs(sqrt(p.x*p.x+y*y) - 1.)
 		pal = PaletteHeart
 	} else if index == BlockGoldenHeartIndex {
 		p = normalize(p)
 		y := -p.y-abs(p.x)
-		t = abs(sqrt(p.x*p.x+y*y) - 1.0)
+		t = abs(sqrt(p.x*p.x+y*y) - 1.)
 		pal = PaletteGoldenHeart
+	} else if index == BlockChargingBeamIndex {
+		pal = PaletteChargingBeam
 	}
 	
 	return palette(t, pal)
@@ -205,6 +211,20 @@ func sdBox(p, b, offset vec3, index float) mat3 {
 	p = translate(p, offset)
 	q := abs(p) - b
   	d := length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)
+
+	return mat3(
+		vec3(d, index, 0.),
+		offset,
+		vec3(0.),
+	)
+}
+
+func sdBeam(p, b, offset vec3, index float) mat3 {
+	p = translate(p, offset)
+	// elongate
+	elv := vec3(0., 0., MaxDepth)
+	p = p - clamp(p, -elv, elv)
+	d := length(p) - b.x/2.
 
 	return mat3(
 		vec3(d, index, 0.),
@@ -268,6 +288,8 @@ func sdBlock(p vec3, i float) mat3 {
 		return sdHeart(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockHeartIndex)
 	} else if kind == BlockGoldenHeartIndex {
 		return sdHeart(p, vec3(bs.x, bs.y, bs.x), blockOffset, BlockGoldenHeartIndex)
+	} else if kind == BlockChargingBeamIndex {
+		return sdBeam(p, vec3(bs.x, bs.y, -MaxDepth), blockOffset, BlockChargingBeamIndex)
 	}
 
 	return mat3(0.)
@@ -431,7 +453,13 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 
 	clr = mix(clr, bgColor, 1.0-exp(-0.0002 * d * d * d)) // Fog
 	
-	return vec4(clr, 1.)
+	out := vec4(clr, 1.)
+	// TODO: Dirty hack for laser beam color
+	if obj[0].y == BlockChargingBeamIndex {
+		out *= 0.05
+	}
+	
+	return out
 }
 `)
 

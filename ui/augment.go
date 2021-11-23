@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"runtime"
 
 	"github.com/Zyko0/GameOff2021/assets"
@@ -231,22 +230,6 @@ func (av *AugmentView) Draw(screen *ebiten.Image) {
 		text.DrawWithOptions(screen, av.Augments[i].Description, assets.CardBodyDescriptionTextFontFace, &ebiten.DrawImageOptions{
 			GeoM: geom,
 		})
-		// Cost
-		if cost := av.Augments[i].GetCost(); cost.Kind != augments.CostNone {
-			str := "Cost: "
-			switch cost.Kind {
-			case augments.CostHP:
-				str += fmt.Sprintf("%d HP", cost.Value)
-			}
-			geom = ebiten.GeoM{}
-			geom.Translate(
-				float64(x)+float64(augmentDescriptionCardOffset)+4,
-				float64(y)+216,
-			)
-			text.DrawWithOptions(screen, str, assets.CardBodyTextFontFace, &ebiten.DrawImageOptions{
-				GeoM: geom,
-			})
-		}
 		// Highlight selection
 		if i == av.SelectedIndex {
 			graphics.DrawRectBorder(

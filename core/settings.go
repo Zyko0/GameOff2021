@@ -6,10 +6,8 @@ import (
 )
 
 const (
-	MaxPlayerSpeed         = 0.02
-	MaxHeartContainers     = 10
-	SlowMotionTickInterval = logic.TPS * 20 // Trigger a slowmo every 20 secs
-	SlowMotionTickDuration = logic.TPS * 2  // Make it last 2 secs to allow player re-calibration
+	MaxPlayerSpeed     = 0.02
+	MaxHeartContainers = 10
 )
 
 type Action byte
@@ -21,19 +19,25 @@ const (
 )
 
 type BlockSettings struct {
-	MinBlocksSpawn                               int
-	MaxBlocksSpawn                               int
-	SpawnDistanceInterval                        uint64
-	SpawnDepth                                   float64
-	Regular, Harder, Harder2, Heart, GoldenHeart bool
-	HigherSpawn                                  bool
-	TallerBlocks                                 bool
+	MinBlocksSpawn        int
+	MaxBlocksSpawn        int
+	SpawnDistanceInterval uint64
+	SpawnDepth            float64
+	Regular               bool
+	Harder                bool
+	Harder2               bool
+	Heart                 bool
+	GoldenHeart           bool
+	LateralHole           bool
+	LongHole              bool
+	ChargingBeam          bool
+	HigherSpawn           bool
+	TallerBlocks          bool
 }
 
 type baseSettings struct {
 	Action                Action
 	HpToGameOver          int
-	SlowMotion            bool
 	HeartContainers       uint
 	PerfectStep           bool
 	DebugLines            float32
@@ -50,9 +54,8 @@ func newBaseSettings() *baseSettings {
 	return &baseSettings{
 		Action:                ActionNone,
 		HpToGameOver:          0,
-		SlowMotion:            false,
-		HeartContainers:       3,
-		PerfectStep:           false,
+		HeartContainers:       5,
+		PerfectStep:           true, // Remove
 		DebugLines:            0.,
 		CameraPosition:        []float32{0, -0.2, -1.15},
 		Circular:              false,
@@ -68,8 +71,11 @@ func newBaseSettings() *baseSettings {
 			Regular:               true,
 			Harder:                false,
 			Harder2:               false,
-			Heart:                 false,
-			GoldenHeart:           false,
+			Heart:                 true,
+			GoldenHeart:           true,
+			LateralHole:           false,
+			LongHole:              false,
+			ChargingBeam:          false, // TODO: disable
 			HigherSpawn:           false,
 			TallerBlocks:          false,
 		},
@@ -98,8 +104,6 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.DebugLines = 1.
 		case augments.IDHighSpawn:
 			s.BlockSettings.HigherSpawn = true
-		case augments.IDSlowMotion:
-			s.SlowMotion = true
 		case augments.IDHeartSpawn:
 			s.BlockSettings.Heart = true
 		case augments.IDGoldHeartSpawn:
@@ -109,8 +113,6 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			if s.HeartContainers > MaxHeartContainers {
 				s.HeartContainers = MaxHeartContainers
 			}
-		case augments.IDNegativeHearts:
-			s.HpToGameOver = -3
 		case augments.IDCircular:
 			s.Circular = true
 		case augments.IDPerfectStep:
@@ -128,12 +130,16 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.BlockSettings.SpawnDepth = 27 * 3 / 4
 		case augments.IDCloserSpawns2:
 			s.BlockSettings.SpawnDepth = 27 * 1 / 2
-		case augments.IDNothing, augments.IDNothing2, augments.IDNothing3, augments.IDNothing4:
-			// Nothing
 		case augments.IDHarderBlocks:
 			s.BlockSettings.Harder = true
 		case augments.IDHarderBlocks2:
 			s.BlockSettings.Harder2 = true
+		case augments.IDLateralHoles:
+			s.BlockSettings.LateralHole = true
+		case augments.IDLongHoles:
+			s.BlockSettings.LongHole = true
+		case augments.IDChargingBeam:
+			s.BlockSettings.ChargingBeam = true
 		case augments.IDNoRegularBlocks:
 			s.BlockSettings.Regular = false
 		}

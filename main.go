@@ -107,18 +107,9 @@ func (g *Game) Update() error {
 		}
 		// If the view is not active anymore, check for selection
 		a := g.augmentView.Augments[g.augmentView.SelectedIndex]
-		// Special check for augment re-roll
-		if a.ID == augments.IDFreeRoll {
-			rolls := g.augmentManager.RollAugments(g.core.Wave.Number, false)
-			g.augmentView.SetAugments(rolls)
-			return nil
-		}
 		// Otherwise pick augment
-		cost := g.augmentManager.AddAugment(a)
+		g.augmentManager.AddAugment(a)
 		g.core.Settings.ApplyAugments(g.augmentManager.CurrentAugments)
-		if cost.Kind == augments.CostHP {
-			g.core.PlayerHP -= cost.Value
-		}
 		// If the 2nd positive augment has been taken, then start next wave
 		if a.Rarity != augments.RarityNegative {
 			g.core.StartNextWave()
@@ -199,6 +190,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"PaletteBlockHarder2": graphics.PaletteBlockHarder2,
 				"PaletteHeart":        graphics.PaletteHeart,
 				"PaletteGoldenHeart":  graphics.PaletteGoldenHeart,
+				"PaletteChargingBeam": graphics.PaletteChargingBeam,
 			},
 		})
 		// Draw HUD on offscreen

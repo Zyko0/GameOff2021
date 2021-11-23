@@ -21,13 +21,16 @@ import (
 )
 
 var (
-	geom = ebiten.GeoM{}
+	geom             = ebiten.GeoM{}
+	resolutionFactor = 4
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 
+	geom.Scale(float64(resolutionFactor), float64(resolutionFactor))
 	geom.Translate(float64(logic.ScreenWidth-logic.GameSquareDim)/2, 0)
+
 	debug.SetGCPercent(-1)
 }
 
@@ -57,13 +60,16 @@ func New() *Game {
 		pauseView:    ui.NewPauseView(),
 		gameOverView: ui.NewGameoverView(),
 		augmentView:  ui.NewAugmentView(),
-		hud:          ui.NewHUD(level.PlayerHP, nil),
+		hud:          ui.NewHUD(level.PlayerHP),
 
 		core:           level,
 		augmentManager: augments.NewManager(),
 
-		offscreen: ebiten.NewImage(logic.GameSquareDim, logic.GameSquareDim),
-		cache:     graphics.NewCache(),
+		offscreen: ebiten.NewImage(
+			logic.GameSquareDim/resolutionFactor,
+			logic.GameSquareDim/resolutionFactor,
+		),
+		cache: graphics.NewCache(),
 	}
 }
 
@@ -159,7 +165,7 @@ func (g *Game) Update() error {
 		g.cache.BlockKinds[i] = float32(b.GetKind())
 	}
 	// Update HUD
-	g.hud.Update(g.core.PlayerHP, g.augmentManager.CurrentAugments)
+	g.hud.Update(g.core.PlayerHP)
 
 	return nil
 }
@@ -170,7 +176,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		x, y, z := core.XYZToGraphics(g.core.Player.GetX(), g.core.Player.GetY(), g.core.Player.GetZ())
 		g.offscreen.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
 			Uniforms: map[string]interface{}{
-				"ScreenSize":     []float32{float32(logic.GameSquareDim), float32(logic.GameSquareDim)},
+				"ScreenSize":     []float32{float32(logic.GameSquareDim / resolutionFactor), float32(logic.GameSquareDim / resolutionFactor)},
 				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
 				"PlayerRadius":   float32(g.core.Player.GetRadius()),
 				"Camera":         g.core.Settings.CameraPosition,

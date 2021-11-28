@@ -39,7 +39,7 @@ func NewPauseView() *PauseView {
 		GeoM: geom,
 	})
 	// Resume text
-	str = "Press 'P' to resume the game"
+	str = "Press 'P'/'Esc' to resume the game"
 	rect = text.BoundString(assets.CardBodyTextFontFace, str)
 	geom = ebiten.GeoM{}
 	geom.Translate(
@@ -64,7 +64,7 @@ func (pv *PauseView) Reset() {
 }
 
 func (pv *PauseView) Update() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyP) || inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		pv.active = !pv.active
 	}
 }

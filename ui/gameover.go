@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"runtime"
-
 	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/graphics"
 	"github.com/Zyko0/GameOff2021/logic"
@@ -67,8 +65,6 @@ func (gv *GameoverView) Update(playerHP, hpToGameOver int) {
 	if gv.active {
 		assets.StopInGameMusic()
 		assets.PlayMainmenuMusic()
-		// Trigger GC manually when in a UI view
-		runtime.GC()
 	} else {
 		assets.StopMainmenuMusic()
 	}

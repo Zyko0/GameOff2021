@@ -1,5 +1,7 @@
 package core
 
+import "runtime"
+
 const (
 	DefaultSpeed = 2.0
 	MaxSpeed     = 4.0
@@ -16,10 +18,15 @@ type Wave struct {
 }
 
 func newWave(number int) *Wave {
+	// Trigger GC manually whenever creating a new wave
+	// Note: this is ugly, but it's only there because we disabled automatic GC in main
+	runtime.GC()
+
 	speed := DefaultSpeed + 0.25*float64(number)
 	if speed > MaxSpeed {
 		speed = MaxSpeed
 	}
+
 	return &Wave{
 		intSpeed: 1,
 

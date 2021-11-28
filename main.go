@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"image/color"
 	"math/rand"
@@ -20,16 +19,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
-var (
-	geom             = ebiten.GeoM{}
-	resolutionFactor = 1
-)
-
 func init() {
 	rand.Seed(time.Now().UnixNano())
-
-	geom.Scale(float64(resolutionFactor), float64(resolutionFactor))
-	geom.Translate(float64(logic.ScreenWidth-logic.GameSquareDim)/2, 0)
 
 	debug.SetGCPercent(-1)
 }
@@ -37,6 +28,8 @@ func init() {
 type Game struct {
 	paused bool
 
+	splashView   *ui.SplashView
+	mainMenuView *ui.MainMenuView
 	pauseView    *ui.PauseView
 	gameOverView *ui.GameoverView
 	augmentView  *ui.AugmentView
@@ -45,18 +38,19 @@ type Game struct {
 	core           *core.Core
 	augmentManager *augments.Manager
 
-	offscreen *ebiten.Image
-	cache     *graphics.Cache
+	cache *graphics.Cache
 
 	needsRedraw bool
 }
 
 func New() *Game {
-	level := core.NewCore()
+	level := core.NewCore(assets.DefaultSFXManager())
 	return &Game{
 		paused:      false,
 		needsRedraw: false,
 
+		splashView:   ui.NewSplashView(),
+		mainMenuView: ui.NewMainMenuView(),
 		pauseView:    ui.NewPauseView(),
 		gameOverView: ui.NewGameoverView(),
 		augmentView:  ui.NewAugmentView(),
@@ -65,20 +59,30 @@ func New() *Game {
 		core:           level,
 		augmentManager: augments.NewManager(),
 
-		offscreen: ebiten.NewImage(
-			logic.GameSquareDim/resolutionFactor,
-			logic.GameSquareDim/resolutionFactor,
-		),
 		cache: graphics.NewCache(),
 	}
 }
 
 func (g *Game) Update() error {
 	g.needsRedraw = false
+	// Check for any user input changing quality
+	if graphics.UpdateQualitySettings() {
+		g.needsRedraw = true
+	}
+	// Splash screen view
+	if g.splashView.Active() {
+		g.splashView.Update()
+		return nil
+	}
+	// Main menu view with background demo
+	if g.mainMenuView.Active() {
+		g.mainMenuView.Update()
+		return nil
+	}
 	// Handle game reset first
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		rand.Seed(time.Now().UnixNano())
-		g.core = core.NewCore()
+		g.core = core.NewCore(assets.DefaultSFXManager())
 		g.pauseView.Reset()
 		g.augmentView.Reset()
 		g.augmentManager.Reset()
@@ -126,13 +130,7 @@ func (g *Game) Update() error {
 	// Reset player's moving intents
 	g.core.Player.SetIntentX(0)
 	g.core.Player.SetIntentJump(false)
-	// Quit
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		// TODO: Don't forget to remove this
-		return errors.New("soft kill")
-	}
 	// Jump
-	// TODO:
 	if kpd := inpututil.KeyPressDuration(ebiten.KeySpace); kpd > 0 {
 		g.core.Player.SetIntentJump(true)
 	}
@@ -166,12 +164,22 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// Splash screen view
+	if g.splashView.Active() {
+		g.splashView.Draw(screen)
+		return
+	}
+	// Main menu view with background demo
+	if g.mainMenuView.Active() {
+		g.mainMenuView.Draw(screen)
+		return
+	}
 	// Offscreen intermediate draw
-	if g.needsRedraw { // Save gpu resources if game is paused
+	if g.needsRedraw { // Save gpu resources if game is paused or if there has not been any update
 		x, y, z := core.XYZToGraphics(g.core.Player.GetX(), g.core.Player.GetY(), g.core.Player.GetZ())
-		g.offscreen.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchingShader, &ebiten.DrawRectShaderOptions{
+		graphics.GetOffscreenImage().DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchingShader, &ebiten.DrawRectShaderOptions{
 			Uniforms: map[string]interface{}{
-				"ScreenSize":     []float32{float32(logic.GameSquareDim / resolutionFactor), float32(logic.GameSquareDim / resolutionFactor)},
+				"ScreenSize":     []float32{float32(logic.GameSquareDim / graphics.GetQuality()), float32(logic.GameSquareDim / graphics.GetQuality())},
 				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
 				"PlayerRadius":   float32(g.core.Player.GetRadius()),
 				"Camera":         g.core.Settings.CameraPosition,
@@ -191,19 +199,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"PaletteBlockHarder2": graphics.PaletteBlockHarder2,
 				"PaletteHeart":        graphics.PaletteHeart,
 				"PaletteGoldenHeart":  graphics.PaletteGoldenHeart,
-				"PaletteChargingBeam": graphics.PaletteChargingBeam,
 			},
 		})
 		// Draw HUD on offscreen
-		g.hud.Draw(g.offscreen)
-		// Let Update() decide whenever there's a need for drawing the whole scene again
+		g.hud.Draw(graphics.GetOffscreenImage())
+		// Let Update decide whenever there's a need for drawing the whole game scene again
 		g.needsRedraw = false
 	}
 	// Draw buffer to screen
-	screen.DrawImage(g.offscreen, &ebiten.DrawImageOptions{
-		GeoM:   geom,
-		Filter: ebiten.FilterNearest, // TODO: Consider Linear when low resolution
-	})
+	screen.DrawImage(graphics.GetOffscreenImage(), graphics.GetOffscreenOpts())
 	// Gameover view
 	if g.gameOverView.Active() {
 		g.gameOverView.Draw(screen)
@@ -239,25 +243,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	/*
-		f, err := os.Create("beat.prof")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer f.Close()
-		err = pprof.StartCPUProfile(f)
-		if err != nil {
-			fmt.Println("couldn't profile:", err)
-			return
-		}
-		defer pprof.StopCPUProfile()
-	*/
-
 	ebiten.SetMaxTPS(logic.TPS)
-	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-	// TODO: set vsync on
 	// Note: setTimeout is called when FPSMoveVsyncOffMaximum which might create lag
 	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	ebiten.SetFullscreen(true)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 

@@ -29,6 +29,9 @@ var (
 	//go:embed sound/heart.wav
 	heartSoundBytes  []byte
 	heartAudioPlayer *audio.Player
+
+	defaultSFXManager = &sfxManagerImpl{}
+	noopSFXManager    = &noopSFXManagerImpl{}
 )
 
 func init() {
@@ -77,6 +80,39 @@ func init() {
 	mainmenuAudioPlayer.SetVolume(defaultMusicVolume)
 }
 
+type SFXManager interface {
+	PlayHitSound()
+	PlayHeartSound()
+}
+
+type noopSFXManagerImpl struct{}
+
+func (n *noopSFXManagerImpl) PlayHitSound() {}
+
+func (n *noopSFXManagerImpl) PlayHeartSound() {}
+
+func NoopSFXManager() SFXManager {
+	return noopSFXManager
+}
+
+type sfxManagerImpl struct{}
+
+func (s *sfxManagerImpl) PlayHitSound() {
+	hitAudioPlayer.Rewind()
+	hitAudioPlayer.Play()
+}
+
+func (s *sfxManagerImpl) PlayHeartSound() {
+	heartAudioPlayer.Rewind()
+	heartAudioPlayer.Play()
+}
+
+func DefaultSFXManager() SFXManager {
+	return defaultSFXManager
+}
+
+// Global music options
+
 func ReplayInGameMusic() {
 	ingameAudioPlayer.Rewind()
 	if !ingameAudioPlayer.IsPlaying() {
@@ -107,14 +143,4 @@ func StopMainmenuMusic() {
 	if mainmenuAudioPlayer.IsPlaying() {
 		mainmenuAudioPlayer.Pause()
 	}
-}
-
-func PlayHitSound() {
-	hitAudioPlayer.Rewind()
-	hitAudioPlayer.Play()
-}
-
-func PlayHeartSound() {
-	heartAudioPlayer.Rewind()
-	heartAudioPlayer.Play()
 }

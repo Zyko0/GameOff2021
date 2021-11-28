@@ -34,7 +34,6 @@ func newJump() *jump {
 func (m *jump) Update(intent bool) {
 	if m.currentDuration < m.duration {
 		d := float64(m.currentDuration) / float64(m.duration)
-		// d = float64(m.currentDuration) / float64(m.duration)
 		c := (-(d * d) + d)
 		m.y = DefaultPlayerRadius + c
 		m.currentDuration++

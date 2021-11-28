@@ -28,15 +28,11 @@ type BlockSettings struct {
 	Harder2               bool
 	Heart                 bool
 	GoldenHeart           bool
-	LateralHole           bool
-	LongHole              bool
-	ChargingBeam          bool
 	HigherSpawn           bool
 	TallerBlocks          bool
 }
 
 type baseSettings struct {
-	Action                Action
 	HpToGameOver          int
 	HeartContainers       uint
 	PerfectStep           bool
@@ -52,7 +48,6 @@ type baseSettings struct {
 
 func newBaseSettings() *baseSettings {
 	return &baseSettings{
-		Action:                ActionNone,
 		HpToGameOver:          0,
 		HeartContainers:       10,
 		PerfectStep:           false, // TODO: Remove
@@ -73,9 +68,6 @@ func newBaseSettings() *baseSettings {
 			Harder2:               false,
 			Heart:                 true,
 			GoldenHeart:           true,
-			LateralHole:           false,
-			LongHole:              false,
-			ChargingBeam:          false, // TODO: disable
 			HigherSpawn:           false,
 			TallerBlocks:          false,
 		},

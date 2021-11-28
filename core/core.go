@@ -25,9 +25,12 @@ const (
 type Core struct {
 	tick uint64
 
-	invulnTime int
-	blockSeeds []float32
-	score      uint64
+	invulnTime      int
+	blockSeeds      []float32
+	score           uint64
+	scoreMultiplier uint64
+
+	sfxManager assets.SFXManager
 
 	Wave     *Wave
 	PlayerHP int
@@ -36,7 +39,7 @@ type Core struct {
 	Settings *Settings
 }
 
-func NewCore() *Core {
+func NewCore(sfxManager assets.SFXManager) *Core {
 	seeds := make([]float32, 7)
 	for i := range seeds {
 		seeds[i] = 0.5 + rand.Float32()*0.5
@@ -45,9 +48,12 @@ func NewCore() *Core {
 	c := &Core{
 		tick: 0,
 
-		blockSeeds: seeds,
-		invulnTime: 0,
-		score:      0,
+		blockSeeds:      seeds,
+		invulnTime:      0,
+		score:           0,
+		scoreMultiplier: 1,
+
+		sfxManager: sfxManager,
 
 		Wave:     newWave(0),
 		PlayerHP: 3, // 3 is okay, since heart are farmable up to 10 early
@@ -164,26 +170,28 @@ func (c *Core) Update() {
 	// If there's a depth hit and not in an invulnerability frame, check for damage loss or hp up
 	if c.invulnTime <= 0 {
 		for _, b := range c.Blocks {
-			// Check z intersection
 			if collides, tdz := internal.DepthCollisionPlayerTest(c.Player, b, dz); collides {
 				switch b.kind {
 				case BlockKindHeart:
-					assets.PlayHeartSound()
+					c.sfxManager.PlayHeartSound()
 					c.PlayerHP++
 				case BlockKindGoldenHeart:
-					assets.PlayHeartSound()
+					c.sfxManager.PlayHeartSound()
 					c.PlayerHP += 2
 				case BlockKindRegular:
-					assets.PlayHitSound()
+					c.sfxManager.PlayHitSound()
 					c.PlayerHP--
+					c.scoreMultiplier = 1
 				case BlockKindHarder:
 					// TODO: Make a different sound
-					assets.PlayHitSound()
+					c.sfxManager.PlayHitSound()
 					c.PlayerHP -= 2
+					c.scoreMultiplier = 1
 				case BlockKindHarder2:
 					// TODO: Make a different sound
-					assets.PlayHitSound()
+					c.sfxManager.PlayHitSound()
 					c.PlayerHP -= 3
+					c.scoreMultiplier = 1
 				}
 
 				c.invulnTime = InvulnTime
@@ -215,6 +223,8 @@ func (c *Core) Update() {
 
 	c.tick++
 	c.Wave.Update()
+
+	c.score += uint64(c.Wave.Number+1) * c.scoreMultiplier
 }
 
 func (c *Core) IsWaveOver() bool {
@@ -234,7 +244,7 @@ func (c *Core) GetSpeed() float64 {
 }
 
 func (c *Core) GetScore() uint64 {
-	return uint64(c.Wave.Distance)
+	return c.score
 }
 
 func (c *Core) GetTicks() uint64 {

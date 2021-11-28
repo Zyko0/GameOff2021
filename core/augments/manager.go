@@ -5,10 +5,7 @@ import "math/rand"
 type Manager struct {
 	currentAugmentsByID []*Augment
 
-	possibleAugmentsCommon    []*Augment
-	possibleAugmentsEpic      []*Augment
-	possibleAugmentsLegendary []*Augment
-	possibleAugmentsNegative  []*Augment
+	possibleAugments    []*Augment
 
 	CurrentAugments []*Augment
 }
@@ -17,10 +14,7 @@ func NewManager() *Manager {
 	return &Manager{
 		currentAugmentsByID: make([]*Augment, IDMax),
 
-		possibleAugmentsCommon:    make([]*Augment, 0, IDMax),
-		possibleAugmentsEpic:      make([]*Augment, 0, IDMax),
-		possibleAugmentsLegendary: make([]*Augment, 0, IDMax),
-		possibleAugmentsNegative:  make([]*Augment, 0, IDMax),
+		possibleAugments:    make([]*Augment, 0, IDMax),
 
 		CurrentAugments: []*Augment{},
 	}
@@ -34,10 +28,7 @@ func (m *Manager) Reset() {
 }
 
 func (am *Manager) generatePossibleAugments(waveNumber int) {
-	am.possibleAugmentsCommon = am.possibleAugmentsCommon[:0]
-	am.possibleAugmentsEpic = am.possibleAugmentsEpic[:0]
-	am.possibleAugmentsLegendary = am.possibleAugmentsLegendary[:0]
-	am.possibleAugmentsNegative = am.possibleAugmentsNegative[:0]
+	am.possibleAugments = am.possibleAugments[:0]
 
 	for _, a := range List {
 		// Check constraints satisfaction
@@ -55,24 +46,8 @@ func (am *Manager) generatePossibleAugments(waveNumber int) {
 		if am.currentAugmentsByID[a.ID] != nil && !a.Stackable {
 			continue
 		}
-		// Hard fixes
-		switch a.ID {
-		case IDPerfectStep:
-			if waveNumber < 5 {
-				continue
-			}
-		}
 		// Add and order by rarity
-		switch a.Rarity {
-		case RarityCommon:
-			am.possibleAugmentsCommon = append(am.possibleAugmentsCommon, a)
-		case RarityEpic:
-			am.possibleAugmentsEpic = append(am.possibleAugmentsEpic, a)
-		case RarityLegendary:
-			am.possibleAugmentsLegendary = append(am.possibleAugmentsLegendary, a)
-		case RarityNegative:
-			am.possibleAugmentsNegative = append(am.possibleAugmentsNegative, a)
-		}
+		am.possibleAugments = append(am.possibleAugments, a)
 	}
 }
 
@@ -93,21 +68,10 @@ func (am *Manager) rollAugments(possible []*Augment) []*Augment {
 	return rolls
 }
 
-func (am *Manager) RollAugments(waveNumber int, negative bool) []*Augment {
+func (am *Manager) RollAugments(waveNumber int) []*Augment {
 	am.generatePossibleAugments(waveNumber)
-
-	if negative {
-		return am.rollAugments(am.possibleAugmentsNegative)
-	}
-	rarity := rand.Float64()
-	switch {
-	case rarity < LegendaryRarityPercent:
-		return am.rollAugments(am.possibleAugmentsLegendary)
-	case rarity < EpicRarityPercent:
-		return am.rollAugments(am.possibleAugmentsEpic)
-	default:
-		return am.rollAugments(am.possibleAugmentsCommon)
-	}
+	
+	return am.rollAugments(am.possibleAugments)
 }
 
 func (am *Manager) AddAugment(augment *Augment) {

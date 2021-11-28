@@ -54,8 +54,8 @@ func newBaseSettings() *baseSettings {
 	return &baseSettings{
 		Action:                ActionNone,
 		HpToGameOver:          0,
-		HeartContainers:       5,
-		PerfectStep:           true, // Remove
+		HeartContainers:       10,
+		PerfectStep:           false, // TODO: Remove
 		DebugLines:            0.,
 		CameraPosition:        []float32{0, -0.2, -1.15},
 		Circular:              false,
@@ -100,23 +100,10 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 
 	for _, a := range currentAugments {
 		switch a.ID {
-		case augments.IDDebugLines:
-			s.DebugLines = 1.
 		case augments.IDHighSpawn:
 			s.BlockSettings.HigherSpawn = true
-		case augments.IDHeartSpawn:
-			s.BlockSettings.Heart = true
-		case augments.IDGoldHeartSpawn:
-			s.BlockSettings.GoldenHeart = true
-		case augments.IDHeartContainer:
-			s.HeartContainers++
-			if s.HeartContainers > MaxHeartContainers {
-				s.HeartContainers = MaxHeartContainers
-			}
 		case augments.IDCircular:
 			s.Circular = true
-		case augments.IDPerfectStep:
-			s.PerfectStep = true
 		case augments.IDMoreBlocks:
 			s.BlockSettings.MaxBlocksSpawn = 4
 			s.BlockSettings.MinBlocksSpawn = 3
@@ -134,12 +121,6 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.BlockSettings.Harder = true
 		case augments.IDHarderBlocks2:
 			s.BlockSettings.Harder2 = true
-		case augments.IDLateralHoles:
-			s.BlockSettings.LateralHole = true
-		case augments.IDLongHoles:
-			s.BlockSettings.LongHole = true
-		case augments.IDChargingBeam:
-			s.BlockSettings.ChargingBeam = true
 		case augments.IDNoRegularBlocks:
 			s.BlockSettings.Regular = false
 		}

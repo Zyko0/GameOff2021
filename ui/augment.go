@@ -12,13 +12,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
-type AugmentViewStep byte
-
-const (
-	AugmentStepNegative AugmentViewStep = iota
-	AugmentStepPositive
-)
-
 const (
 	augmentOffsetX = float32(logic.ScreenWidth-logic.GameSquareDim) / 2
 
@@ -39,16 +32,12 @@ const (
 )
 
 var (
-	augmentBgColorCommon    = []float32{0.36, 0.48, 0.92, 0.7}
-	augmentBgColorEpic      = []float32{2. / 3., 0.078, 0.94, 0.7}
-	augmentBgColorLegendary = []float32{1.0, 0.75, 0, 0.7}
-	augmentBgColorNegative  = []float32{0.7, 0, 0, 0.7}
+	augmentBgColor = []float32{0.7, 0, 0, 0.7}
 
 	augmentDescriptionBgColor = []float32{1, 1, 1, 0.3}
 )
 
 type AugmentView struct {
-	step   AugmentViewStep
 	active bool
 
 	lastCursorX int
@@ -76,7 +65,6 @@ func NewAugmentView() *AugmentView {
 	})
 
 	return &AugmentView{
-		step:   AugmentStepNegative,
 		active: false,
 
 		card: card,
@@ -87,17 +75,8 @@ func NewAugmentView() *AugmentView {
 }
 
 func (av *AugmentView) Reset() {
-	av.step = AugmentStepNegative
 	av.active = false
 	av.SelectedIndex = 0
-}
-
-func (av *AugmentView) SetStep(step AugmentViewStep) {
-	av.step = step
-}
-
-func (av *AugmentView) GetStep() AugmentViewStep {
-	return av.step
 }
 
 func (av *AugmentView) Active() bool {
@@ -179,18 +158,6 @@ func (av *AugmentView) Draw(screen *ebiten.Image) {
 	})
 	// Augment cards
 	for i := range av.Augments {
-		var clr []float32
-
-		switch av.Augments[i].Rarity {
-		case augments.RarityCommon:
-			clr = augmentBgColorCommon
-		case augments.RarityEpic:
-			clr = augmentBgColorEpic
-		case augments.RarityLegendary:
-			clr = augmentBgColorLegendary
-		case augments.RarityNegative:
-			clr = augmentBgColorNegative
-		}
 		// Card rectangle
 		x := augmentOffsetX + augmentBgOffsetX + float32(i+1)*augmentCardIntervalOffset + float32(i)*augmentCardWidth
 		y := float32(augmentCardOffsetY)
@@ -199,7 +166,7 @@ func (av *AugmentView) Draw(screen *ebiten.Image) {
 			x, y,
 			augmentCardWidth,
 			augmentCardHeight,
-			clr,
+			augmentBgColor,
 		)
 		// Card title text
 		rect := text.BoundString(assets.CardBodyTitleFontFace, av.Augments[i].Name)

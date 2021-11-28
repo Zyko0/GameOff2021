@@ -22,7 +22,7 @@ import (
 
 var (
 	geom             = ebiten.GeoM{}
-	resolutionFactor = 4
+	resolutionFactor = 1
 )
 
 func init() {
@@ -100,8 +100,7 @@ func (g *Game) Update() error {
 	if g.core.IsWaveOver() {
 		// If needs an augment selection but the view is not active yet, roll, activate and abort
 		if !g.augmentView.Active() {
-			negative := g.augmentView.GetStep() == ui.AugmentStepNegative
-			rolls := g.augmentManager.RollAugments(g.core.Wave.Number, negative)
+			rolls := g.augmentManager.RollAugments(g.core.Wave.Number)
 			g.augmentView.SetAugments(rolls)
 			return nil
 		}
@@ -116,13 +115,9 @@ func (g *Game) Update() error {
 		// Otherwise pick augment
 		g.augmentManager.AddAugment(a)
 		g.core.Settings.ApplyAugments(g.augmentManager.CurrentAugments)
-		// If the 2nd positive augment has been taken, then start next wave
-		if a.Rarity != augments.RarityNegative {
-			g.core.StartNextWave()
-			g.augmentView.Reset()
-		} else {
-			g.augmentView.SetStep(ui.AugmentStepPositive)
-		}
+		// Start next wave
+		g.core.StartNextWave()
+		g.augmentView.Reset()
 	}
 	// Require a draw
 	g.needsRedraw = true
@@ -174,7 +169,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Offscreen intermediate draw
 	if g.needsRedraw { // Save gpu resources if game is paused
 		x, y, z := core.XYZToGraphics(g.core.Player.GetX(), g.core.Player.GetY(), g.core.Player.GetZ())
-		g.offscreen.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchShader, &ebiten.DrawRectShaderOptions{
+		g.offscreen.DrawRectShader(logic.GameSquareDim, logic.GameSquareDim, shaders.RaymarchingShader, &ebiten.DrawRectShaderOptions{
 			Uniforms: map[string]interface{}{
 				"ScreenSize":     []float32{float32(logic.GameSquareDim / resolutionFactor), float32(logic.GameSquareDim / resolutionFactor)},
 				"PlayerPosition": []float32{float32(x), float32(y), float32(z)},
@@ -207,7 +202,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw buffer to screen
 	screen.DrawImage(g.offscreen, &ebiten.DrawImageOptions{
 		GeoM:   geom,
-		Filter: ebiten.FilterNearest,
+		Filter: ebiten.FilterNearest, // TODO: Consider Linear when low resolution
 	})
 	// Gameover view
 	if g.gameOverView.Active() {

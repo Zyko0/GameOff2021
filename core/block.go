@@ -19,9 +19,6 @@ const (
 	BlockKindHarder2      BlockKind = 6
 	BlockKindHeart        BlockKind = 7
 	BlockKindGoldenHeart  BlockKind = 8
-	BlockKindLateralHole  BlockKind = 9
-	BlockKindLongHole     BlockKind = 10
-	BlockKindChargingBeam BlockKind = 11
 )
 
 type Block struct {
@@ -30,12 +27,6 @@ type Block struct {
 }
 
 func newBlock(x, y, z, width, height float64, kind BlockKind) *Block {
-	if kind == BlockKindChargingBeam {
-		z = 2.5
-		width = 0.
-		height = BlockHeight0
-		y = 0.1
-	}
 	return &Block{
 		width:  width,
 		height: height,

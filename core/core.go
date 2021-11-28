@@ -12,11 +12,14 @@ const (
 	RoadHeight = 1.
 	RoadDepth  = 4.
 
-	InvulnTime = 30
+	InvulnTime = 20
 
 	BlockDefaultSpeed = 0.075
 
-	HeartChance = 0.05 // Let's keep it possible to farm them
+	HeartChance        = 0.05 // Let's keep it possible to farm them
+	GoldenHeartChance  = 0.25
+	BlockHarderChance  = 1. / 2.
+	BlockHarder2Chance = 1. / 4.
 )
 
 type Core struct {
@@ -47,7 +50,7 @@ func NewCore() *Core {
 		score:      0,
 
 		Wave:     newWave(0),
-		PlayerHP: 3,
+		PlayerHP: 3, // 3 is okay, since heart are farmable up to 10 early
 		Player:   NewPlayer(),
 		Blocks:   []*Block{},
 		Settings: newSettings(),
@@ -66,26 +69,18 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 		switch {
 		case settings.Heart && r < HeartChance:
 			kind = BlockKindHeart
-			if settings.GoldenHeart && rand.Intn(2) == 0 {
+			if settings.GoldenHeart && rand.Float64() < GoldenHeartChance {
 				kind = BlockKindGoldenHeart
 			}
 		default:
 			r = rand.Float32()
 			switch {
-			case settings.Harder2 && r < 1./4.:
+			case settings.Harder2 && r < BlockHarder2Chance:
 				kind = BlockKindHarder2
-			case settings.Harder && r < 2./4.:
+			case settings.Harder && r < BlockHarderChance:
 				kind = BlockKindHarder
 			default:
-				r = rand.Float32()
-				switch {
-				case settings.ChargingBeam && r < 1./4.:
-					kind = BlockKindChargingBeam
-				case settings.LateralHole && r < 2./4.:
-					// kind = BlockKindLateralHole
-				case settings.LongHole && r < 3./4.:
-					// kind = BlockKindLongHole
-				case !settings.Regular:
+				if !settings.Regular {
 					kind = BlockKindHarder
 				}
 			}
@@ -166,9 +161,9 @@ func (c *Core) Update() {
 	}
 	// Check collisions for blocks
 	dz := -(c.Wave.Speed * BlockDefaultSpeed)
-	for _, b := range c.Blocks {
-		// If there's a depth hit and not in an invulnerability frame, check for damage loss
-		if c.invulnTime <= 0 || (b.kind == BlockKindHeart || b.kind == BlockKindGoldenHeart) {
+	// If there's a depth hit and not in an invulnerability frame, check for damage loss or hp up
+	if c.invulnTime <= 0 {
+		for _, b := range c.Blocks {
 			// Check z intersection
 			if collides, tdz := internal.DepthCollisionPlayerTest(c.Player, b, dz); collides {
 				switch b.kind {
@@ -189,13 +184,6 @@ func (c *Core) Update() {
 					// TODO: Make a different sound
 					assets.PlayHitSound()
 					c.PlayerHP -= 3
-				case BlockKindChargingBeam:
-					if b.width < 0.2 {
-						// Skip a non-charged laser beam
-						continue
-					}
-					assets.PlayHitSound()
-					c.PlayerHP -= 3
 				}
 
 				c.invulnTime = InvulnTime
@@ -212,25 +200,13 @@ func (c *Core) Update() {
 	}
 	// Update blocks
 	for _, b := range c.Blocks {
-		if b.kind == BlockKindChargingBeam {
-			b.width += 0.001
-		} else {
-			b.z += dz
-		}
+		b.z += dz
 	}
 	// Remove any dead blocks
 	for i := 0; i < len(c.Blocks); i++ {
-		var dead bool
-
 		b := c.Blocks[i]
 		// Fallen off the screen
 		if b.z < 2. {
-			dead = true
-		} else if b.kind == BlockKindChargingBeam && b.width >= 0.2 {
-			// Charging beam finished charging
-			dead = true
-		}
-		if dead {
 			c.Blocks[i] = c.Blocks[len(c.Blocks)-1]
 			c.Blocks = c.Blocks[:len(c.Blocks)-1]
 			i--

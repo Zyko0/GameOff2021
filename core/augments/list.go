@@ -106,7 +106,7 @@ var (
 		},
 	}
 	AugmentNoRegularBlocks = &Augment{
-		ID:          IDHarderBlocks2,
+		ID:          IDNoRegularBlocks,
 		Name:        "No Regular Blocks",
 		Description: "The block you used to know doesn't exist anymore, it must be replaced by another block, hmm...",
 		Stackable:   false,

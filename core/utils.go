@@ -1,5 +1,6 @@
 package core
 
+// Hacky function
 func XYZToGraphics(x, y, z float64) (float64, float64, float64) {
 	// Y doesn't need normalization since we're not going under the floor
 	// TODO: let's investigate Z

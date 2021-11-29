@@ -57,19 +57,19 @@ var (
 	AugmentTallerBlocks = &Augment{
 		ID:          IDTallerBlocks,
 		Name:        "Taller blocks",
-		Description: "Some blocks are taller than the other, how is this supposed to make it harder without a jump ?",
+		Description: "Some blocks are taller than others, let's hope it doesn't go in the camera too much !",
 		Stackable:   false,
 	}
 	AugmentMoreSpawns = &Augment{
 		ID:          IDMoreSpawns,
 		Name:        "More spawns",
-		Description: "Twice the amount of rows spawning... Who let that happen ?",
+		Description: "More rows spawning... Who let that happen ?",
 		Stackable:   false,
 	}
 	AugmentEvenMoreSpawns = &Augment{
 		ID:          IDEvenMoreSpawns,
 		Name:        "More Spawns II",
-		Description: "Three times the amount of rows spawning, this is for testing.",
+		Description: "Way more rows spawning ! TODO(zyko): to remove, this was for testing.",
 		Stackable:   false,
 		Constraints: []ID{
 			IDMoreSpawns,
@@ -84,7 +84,7 @@ var (
 	AugmentCloserSpawns2 = &Augment{
 		ID:          IDCloserSpawns2,
 		Name:        "Closer Spawns II",
-		Description: "So blocks spawn closer now, how is the player supposed to react properly ?",
+		Description: "This is looks like an unfair setting, unless you're a robot.",
 		Stackable:   false,
 		Constraints: []ID{
 			IDCloserSpawns,
@@ -108,7 +108,7 @@ var (
 	AugmentNoRegularBlocks = &Augment{
 		ID:          IDHarderBlocks2,
 		Name:        "No Regular Blocks",
-		Description: "The block you used to know doesn't exist anymore, but then it must be replaced by something, hmm...",
+		Description: "The block you used to know doesn't exist anymore, it must be replaced by another block, hmm...",
 		Stackable:   false,
 		Constraints: []ID{
 			IDHarderBlocks,

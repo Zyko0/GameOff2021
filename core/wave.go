@@ -16,7 +16,7 @@ type Wave struct {
 }
 
 func newWave(number int) *Wave {
-	speed := DefaultSpeed + 0.25*float64(number)
+	speed := DefaultSpeed + 0.2*float64(number)
 	if speed > MaxSpeed {
 		speed = MaxSpeed
 	}

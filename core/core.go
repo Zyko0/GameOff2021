@@ -5,6 +5,7 @@ import (
 
 	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/core/internal"
+	"github.com/Zyko0/GameOff2021/logic"
 )
 
 const (
@@ -56,18 +57,17 @@ func NewCore(sfxManager assets.SFXManager) *Core {
 		sfxManager: sfxManager,
 
 		Wave:     newWave(0),
-		PlayerHP: 3, // 3 is okay, since heart are farmable up to 10 early
+		PlayerHP: 3, // 3 is okay, since hearts are easily farmed up to 10 early
 		Player:   NewPlayer(),
-		Blocks:   []*Block{},
+		Blocks:   make([]*Block, 0, 32),
 		Settings: newSettings(),
 	}
 
 	return c
 }
 
-func spawnBlocks(settings *BlockSettings) []*Block {
+func (c *Core) spawnBlocks(settings *BlockSettings) {
 	blockCount := settings.MinBlocksSpawn + rand.Intn(settings.MaxBlocksSpawn-settings.MinBlocksSpawn+1)
-	blocks := make([]*Block, blockCount)
 	indices := []int{0, 1, 2, 3, 4}
 	for i := 0; i < blockCount; i++ {
 		kind := BlockKindRegular
@@ -110,10 +110,8 @@ func spawnBlocks(settings *BlockSettings) []*Block {
 		indices[idx] = indices[len(indices)-1]
 		indices = indices[:len(indices)-1]
 
-		blocks[i] = newBlock(x, y, settings.SpawnDepth, width, height, kind)
+		c.Blocks = append(c.Blocks, newBlock(x, y, settings.SpawnDepth, width, height, kind))
 	}
-
-	return blocks
 }
 
 func (c *Core) Update() {
@@ -158,8 +156,7 @@ func (c *Core) Update() {
 	// TODO: trying on distance but broken yet
 	distMod := c.Wave.IntDistance % uint64(float64(c.Settings.BlockSettings.SpawnDistanceInterval)/c.Wave.Speed)
 	if (c.Wave.Endless() || c.Wave.Distance < c.Settings.EndWaveDistance) && distMod == 0 {
-		blocks := spawnBlocks(&c.Settings.BlockSettings)
-		c.Blocks = append(c.Blocks, blocks...)
+		c.spawnBlocks(&c.Settings.BlockSettings)
 	}
 	// If in an invulnerability frame, decrement it
 	if c.invulnTime > 0 {
@@ -212,19 +209,20 @@ func (c *Core) Update() {
 	}
 	// Remove any dead blocks
 	for i := 0; i < len(c.Blocks); i++ {
-		b := c.Blocks[i]
 		// Fallen off the screen
-		if b.z < 2. {
+		if c.Blocks[i].z < 2. {
 			c.Blocks[i] = c.Blocks[len(c.Blocks)-1]
 			c.Blocks = c.Blocks[:len(c.Blocks)-1]
-			i--
 		}
 	}
 
 	c.tick++
 	c.Wave.Update()
-
 	c.score += uint64(c.Wave.Number+1) * c.scoreMultiplier
+
+	if c.tick%logic.TPS*2 == 0 {
+		c.scoreMultiplier++
+	}
 }
 
 func (c *Core) IsWaveOver() bool {
@@ -245,6 +243,10 @@ func (c *Core) GetSpeed() float64 {
 
 func (c *Core) GetScore() uint64 {
 	return c.score
+}
+
+func (c *Core) GetScoreMultiplier() uint64 {
+	return c.scoreMultiplier
 }
 
 func (c *Core) GetTicks() uint64 {

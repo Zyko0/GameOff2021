@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	quality = QualityMedium
+	quality = QualityHigh
 
 	offscreenVeryLow = ebiten.NewImage(
 		logic.GameSquareDim/QualityVeryLow,

@@ -21,6 +21,7 @@ const (
 	IDHarderBlocks2
 	IDNoRegularBlocks
 	IDCircular
+	IDFallenCamera
 	// TODO: JumpFix "blabla not the kind of fix you expect" => jump speed depends on game's speed
 	// TODO: Charging beam on Z axis ? One shots ? 1hp ?
 	// TODO: Hole rectangle block on Y=0 - width=1 => Substracts matter to the road

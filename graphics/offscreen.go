@@ -113,13 +113,13 @@ func SetQuality(q int) {
 func UpdateQualitySettings() bool {
 	switch {
 	case inpututil.IsKeyJustPressed(ebiten.Key1):
-		SetQuality(QualityVeryLow)
+		quality = QualityVeryLow
 	case inpututil.IsKeyJustPressed(ebiten.Key2):
-		SetQuality(QualityLow)
+		quality = QualityLow
 	case inpututil.IsKeyJustPressed(ebiten.Key3):
-		SetQuality(QualityMedium)
+		quality = QualityMedium
 	case inpututil.IsKeyJustPressed(ebiten.Key4):
-		SetQuality(QualityHigh)
+		quality = QualityHigh
 	default:
 		return false
 	}

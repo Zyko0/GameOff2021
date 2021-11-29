@@ -29,7 +29,8 @@ func NewMainMenuView() *MainMenuView {
 	demoLevel.Settings.BlockSettings.TallerBlocks = true
 	demoLevel.Settings.BlockSettings.Harder = true
 	demoLevel.Settings.BlockSettings.Harder2 = true
-	demoLevel.Settings.EndWaveDistance = 9999999 // sorry for this magic number
+	demoLevel.Settings.EndWaveDistance = 99999999 // sorry for this magic number
+	demoLevel.Settings.PerfectStep = true
 
 	return &MainMenuView{
 		active: true,

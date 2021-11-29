@@ -16,6 +16,7 @@ func init() {
 	List[IDHarderBlocks2] = AugmentHarderBlocks2
 	List[IDNoRegularBlocks] = AugmentNoRegularBlocks
 	List[IDCircular] = AugmentCircular
+	List[IDFallenCamera] = AugmentFallenCamera
 
 	// Reprocess description texts for them to fit in card caption
 	for _, a := range List {
@@ -51,13 +52,13 @@ var (
 	AugmentMoreBlocks = &Augment{
 		ID:          IDMoreBlocks,
 		Name:        "More blocks",
-		Description: "Wait, this game was designed with 3 blocks per spawn at maximum...",
+		Description: "Hmmm, this game was designed with 3 blocks per spawn at maximum...",
 		Stackable:   false,
 	}
 	AugmentTallerBlocks = &Augment{
 		ID:          IDTallerBlocks,
 		Name:        "Taller blocks",
-		Description: "Some blocks are taller than others, let's hope it doesn't go in the camera too much !",
+		Description: "Some blocks are taller than others, don't drop the camera !",
 		Stackable:   false,
 	}
 	AugmentMoreSpawns = &Augment{
@@ -69,7 +70,7 @@ var (
 	AugmentEvenMoreSpawns = &Augment{
 		ID:          IDEvenMoreSpawns,
 		Name:        "More Spawns II",
-		Description: "Way more rows spawning ! TODO(zyko): to remove, this was for testing.",
+		Description: "Way more rows spawning ! TODO(me): remove, this was for testing.",
 		Stackable:   false,
 		Constraints: []ID{
 			IDMoreSpawns,
@@ -84,7 +85,7 @@ var (
 	AugmentCloserSpawns2 = &Augment{
 		ID:          IDCloserSpawns2,
 		Name:        "Closer Spawns II",
-		Description: "This is looks like an unfair setting, unless you're a robot.",
+		Description: "This looks like an unfair setting, unless you're a robot.",
 		Stackable:   false,
 		Constraints: []ID{
 			IDCloserSpawns,
@@ -108,7 +109,7 @@ var (
 	AugmentNoRegularBlocks = &Augment{
 		ID:          IDNoRegularBlocks,
 		Name:        "No Regular Blocks",
-		Description: "The block you used to know doesn't exist anymore, it must be replaced by another block, hmm...",
+		Description: "The block you used to know doesn't exist anymore, we need a new default block now.",
 		Stackable:   false,
 		Constraints: []ID{
 			IDHarderBlocks,
@@ -118,6 +119,12 @@ var (
 		ID:          IDCircular,
 		Name:        "Circular",
 		Description: "Can someone explain why there is no horizontal boundary anymore ?",
+		Stackable:   false,
+	}
+	AugmentFallenCamera = &Augment{
+		ID:          IDFallenCamera,
+		Name:        "Camera fall",
+		Description: "Someone dropped the camera on the floor, you might have to deal with it...",
 		Stackable:   false,
 	}
 )

@@ -115,6 +115,8 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.BlockSettings.Harder2 = true
 		case augments.IDNoRegularBlocks:
 			s.BlockSettings.Regular = false
+		case augments.IDFallenCamera:
+			s.CameraPosition = []float32{0, 0.15, -1.15}
 		}
 	}
 }

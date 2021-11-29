@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"runtime"
-
 	"github.com/Zyko0/GameOff2021/assets"
 	"github.com/Zyko0/GameOff2021/core/augments"
 	"github.com/Zyko0/GameOff2021/graphics"
@@ -87,8 +85,6 @@ func (av *AugmentView) SetAugments(augments []*augments.Augment) {
 	av.Augments = augments
 	av.active = true
 	ebiten.SetCursorMode(ebiten.CursorModeVisible)
-	// Trigger GC manually when in a UI view
-	runtime.GC()
 }
 
 func (av *AugmentView) Update() {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"math/rand"
-	"runtime/debug"
 	"time"
 
 	"github.com/Zyko0/GameOff2021/assets"
@@ -21,8 +20,6 @@ import (
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
-
-	debug.SetGCPercent(-1)
 }
 
 type Game struct {
@@ -245,8 +242,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func main() {
 	ebiten.SetMaxTPS(logic.TPS)
 	// Note: setTimeout is called when FPSMoveVsyncOffMaximum which might create lag
-	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
-	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	ebiten.SetFullscreen(true)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 

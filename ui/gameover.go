@@ -64,9 +64,9 @@ func (gv *GameoverView) Update(playerHP, hpToGameOver int) {
 	gv.active = playerHP <= hpToGameOver
 	if gv.active {
 		assets.StopInGameMusic()
-		assets.PlayMainmenuMusic()
+		assets.PlayGameoverMusic()
 	} else {
-		assets.StopMainmenuMusic()
+		assets.StopGameoverMusic()
 	}
 }
 

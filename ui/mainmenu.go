@@ -49,6 +49,8 @@ func (mv *MainMenuView) Update() {
 	// Leave on 'Enter' key
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		mv.active = false
+		ebiten.SetCursorMode(ebiten.CursorModeHidden)
+		assets.StopMainmenuMusic()
 		return
 	}
 	// Play a dummy player in the background

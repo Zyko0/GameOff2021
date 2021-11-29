@@ -240,11 +240,12 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	ebiten.SetMaxTPS(logic.TPS)
 	// Note: setTimeout is called when FPSMoveVsyncOffMaximum which might create lag
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+	ebiten.SetMaxTPS(logic.TPS)
 	ebiten.SetFullscreen(true)
-	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+
+	assets.PlayMainmenuMusic()
 
 	if err := ebiten.RunGame(New()); err != nil {
 		fmt.Println("rungame:", err)

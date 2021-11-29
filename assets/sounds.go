@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	defaultSFXVolume   = 0.2
-	defaultMusicVolume = 0.4
+	defaultSFXVolume       = 0.2
+	defaultGameMusicVolume = 0.4
+	defaultMainMenuVolume  = 0.8
 )
 
 var (
@@ -20,6 +21,9 @@ var (
 	//go:embed sound/mainmenu.wav
 	mainmenuMusicBytes  []byte
 	mainmenuAudioPlayer *audio.Player
+	//go:embed sound/gameover.wav
+	gameoverMusicBytes  []byte
+	gameoverAudioPlayer *audio.Player
 	//go:embed sound/ingame.wav
 	ingameMusicBytes  []byte
 	ingameAudioPlayer *audio.Player
@@ -66,18 +70,29 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ingameAudioPlayer.SetVolume(defaultMusicVolume)
+	ingameAudioPlayer.SetVolume(defaultGameMusicVolume)
 
 	reader, err = wav.Decode(ctx, bytes.NewReader(mainmenuMusicBytes))
 	if err != nil {
 		log.Fatal(err)
 	}
-	infiniteReader = audio.NewInfiniteLoop(reader, reader.Length())
+	infiniteReader = audio.NewInfiniteLoopWithIntro(reader, reader.Length()/5, reader.Length())
 	mainmenuAudioPlayer, err = ctx.NewPlayer(infiniteReader)
 	if err != nil {
 		log.Fatal(err)
 	}
-	mainmenuAudioPlayer.SetVolume(defaultMusicVolume)
+	mainmenuAudioPlayer.SetVolume(defaultMainMenuVolume)
+
+	reader, err = wav.Decode(ctx, bytes.NewReader(gameoverMusicBytes))
+	if err != nil {
+		log.Fatal(err)
+	}
+	infiniteReader = audio.NewInfiniteLoop(reader, reader.Length())
+	gameoverAudioPlayer, err = ctx.NewPlayer(infiniteReader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	gameoverAudioPlayer.SetVolume(defaultGameMusicVolume)
 }
 
 type SFXManager interface {
@@ -129,6 +144,19 @@ func ResumeInGameMusic() {
 func StopInGameMusic() {
 	if ingameAudioPlayer.IsPlaying() {
 		ingameAudioPlayer.Pause()
+	}
+}
+
+func PlayGameoverMusic() {
+	if !gameoverAudioPlayer.IsPlaying() {
+		gameoverAudioPlayer.Rewind()
+		gameoverAudioPlayer.Play()
+	}
+}
+
+func StopGameoverMusic() {
+	if gameoverAudioPlayer.IsPlaying() {
+		gameoverAudioPlayer.Pause()
 	}
 }
 

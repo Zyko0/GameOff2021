@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 	"math/rand"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/Zyko0/GameOff2021/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
 func init() {
@@ -51,7 +49,7 @@ func New() *Game {
 		pauseView:    ui.NewPauseView(),
 		gameOverView: ui.NewGameoverView(),
 		augmentView:  ui.NewAugmentView(),
-		hud:          ui.NewHUD(level.PlayerHP),
+		hud:          ui.NewHUD(level.PlayerHP, level.GetScore(), level.Wave.Number, level.GetScoreMultiplier()),
 
 		core:           level,
 		augmentManager: augments.NewManager(),
@@ -155,7 +153,7 @@ func (g *Game) Update() error {
 		g.cache.BlockKinds[i] = float32(b.GetKind())
 	}
 	// Update HUD
-	g.hud.Update(g.core.PlayerHP)
+	g.hud.Update(g.core.PlayerHP, g.core.GetScore(), g.core.Wave.Number, g.core.GetScoreMultiplier())
 
 	return nil
 }
@@ -198,13 +196,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"PaletteGoldenHeart":  graphics.PaletteGoldenHeart,
 			},
 		})
-		// Draw HUD on offscreen
-		g.hud.Draw(graphics.GetOffscreenImage())
 		// Let Update decide whenever there's a need for drawing the whole game scene again
 		g.needsRedraw = false
 	}
 	// Draw buffer to screen
 	screen.DrawImage(graphics.GetOffscreenImage(), graphics.GetOffscreenOpts())
+	// Draw HUD on offscreen
+	g.hud.Draw(screen)
 	// Gameover view
 	if g.gameOverView.Active() {
 		g.gameOverView.Draw(screen)
@@ -222,7 +220,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	// Debug
 	// TODO: this debug took 17sec out of 120sec which is pretty huge
-	str := fmt.Sprintf("TPS %.2f - FPS %.2f - Wave %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
+	/*str := fmt.Sprintf("TPS %.2f - FPS %.2f - Wave %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
 		ebiten.CurrentTPS(),
 		ebiten.CurrentFPS(),
 		g.core.Wave.Number,
@@ -232,7 +230,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.core.PlayerHP,
 		g.core.Wave.Distance,
 	)
-	text.Draw(screen, str, assets.CardBodyDescriptionTextFontFace, 0, 20, color.RGBA{255, 255, 255, 255})
+	text.Draw(screen, str, assets.CardBodyDescriptionTextFontFace, 0, 20, color.RGBA{255, 255, 255, 255})*/
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

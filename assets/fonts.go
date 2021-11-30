@@ -50,12 +50,4 @@ func init() {
 	CardBodyDescriptionTextFontFace = truetype.NewFace(pfont, &truetype.Options{
 		Size: 12,
 	})
-
-	pfont, err = truetype.Parse(gomonobold.TTF)
-	if err != nil {
-		log.Fatal(err)
-	}
-	CardSymbolFontFace = truetype.NewFace(pfont, &truetype.Options{
-		Size: 50,
-	})
 }

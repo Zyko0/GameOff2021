@@ -220,7 +220,7 @@ func (c *Core) Update() {
 	c.Wave.Update()
 	c.score += uint64(c.Wave.Number+1) * c.scoreMultiplier
 
-	if c.tick%logic.TPS*2 == 0 {
+	if c.tick%logic.TPS*3 == 0 {
 		c.scoreMultiplier++
 	}
 }

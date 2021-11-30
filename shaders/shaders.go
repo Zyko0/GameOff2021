@@ -161,8 +161,6 @@ func colorize(p vec3, t, index, seed float) vec3 {
 		t *= (1+noise(p.xz*6., seed))
 		pal = PaletteRoad
 	} else if index == PlaneIndex {
-		// TODO: make the plane more fancy maybe ?
-		// return vec3(0., 0., 0.247)
 		p /= p.z
 		return abs(vec3(p.z*0.25, 0., p.x))
 	} else if index == BlockHarderIndex {

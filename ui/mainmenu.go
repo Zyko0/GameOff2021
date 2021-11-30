@@ -46,6 +46,7 @@ func (mv *MainMenuView) Active() bool {
 }
 
 func (mv *MainMenuView) Update() {
+	core.UpdateGlobalSettings()
 	// Leave on 'Enter' key
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		mv.active = false

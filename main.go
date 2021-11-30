@@ -66,7 +66,6 @@ func (g *Game) Update() error {
 	if graphics.UpdateQualitySettings() {
 		g.needsRedraw = true
 	}
-	core.UpdateGlobalSettings()
 	// Splash screen view
 	if g.splashView.Active() {
 		g.splashView.Update()

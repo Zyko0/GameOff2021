@@ -30,7 +30,6 @@ func NewMainMenuView() *MainMenuView {
 	demoLevel.Settings.BlockSettings.Harder = true
 	demoLevel.Settings.BlockSettings.Harder2 = true
 	demoLevel.Settings.EndWaveDistance = 99999999 // sorry for this magic number
-	demoLevel.Settings.PerfectStep = true
 
 	return &MainMenuView{
 		active: true,
@@ -55,7 +54,15 @@ func (mv *MainMenuView) Update() {
 		return
 	}
 	// Play a dummy player in the background
-	if rand.Intn(logic.TPS/4) == 0 {
+	if mv.demoLevel.Settings.PerfectStep {
+		mv.lastIntentX = 0
+		if rand.Intn(logic.TPS/4) == 0 {
+			mv.lastIntentX = 1
+			if rand.Intn(2) == 0 {
+				mv.lastIntentX = -1
+			}
+		}
+	} else if rand.Intn(logic.TPS/4) == 0 {
 		mv.lastIntentX *= -1
 	}
 

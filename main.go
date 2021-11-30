@@ -66,6 +66,7 @@ func (g *Game) Update() error {
 	if graphics.UpdateQualitySettings() {
 		g.needsRedraw = true
 	}
+	core.UpdateGlobalSettings()
 	// Splash screen view
 	if g.splashView.Active() {
 		g.splashView.Update()
@@ -132,11 +133,11 @@ func (g *Game) Update() error {
 		g.core.Player.SetIntentJump(true)
 	}
 	// Move player right
-	if kpd := inpututil.KeyPressDuration(ebiten.KeyRight); (!g.core.Settings.PerfectStep && kpd > 0) || kpd == 1 {
+	if kpd := inpututil.KeyPressDuration(ebiten.KeyRight); (!core.PerfectStep() && kpd > 0) || kpd == 1 {
 		g.core.Player.SetIntentX(1)
 	}
 	// Move player left
-	if kpd := inpututil.KeyPressDuration(ebiten.KeyLeft); (!g.core.Settings.PerfectStep && kpd > 0) || kpd == 1 {
+	if kpd := inpututil.KeyPressDuration(ebiten.KeyLeft); (!core.PerfectStep() && kpd > 0) || kpd == 1 {
 		g.core.Player.SetIntentX(-1)
 	}
 	// Game update
@@ -181,7 +182,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				"PlayerRadius":   float32(g.core.Player.GetRadius()),
 				"Camera":         g.core.Settings.CameraPosition,
 				"Distance":       float32(g.core.Wave.Distance),
-				"DebugLines":     g.core.Settings.DebugLines,
+				"DebugLines":     core.DebugLines(),
 
 				"BlockCount":     float32(len(g.core.Blocks)),
 				"BlockPositions": g.cache.BlockPositions,

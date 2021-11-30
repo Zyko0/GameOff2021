@@ -54,7 +54,7 @@ func (mv *MainMenuView) Update() {
 		return
 	}
 	// Play a dummy player in the background
-	if mv.demoLevel.Settings.PerfectStep {
+	if core.PerfectStep() {
 		mv.lastIntentX = 0
 		if rand.Intn(logic.TPS/4) == 0 {
 			mv.lastIntentX = 1
@@ -63,6 +63,9 @@ func (mv *MainMenuView) Update() {
 			}
 		}
 	} else if rand.Intn(logic.TPS/4) == 0 {
+		if mv.lastIntentX == 0 {
+			mv.lastIntentX = 1
+		}
 		mv.lastIntentX *= -1
 	}
 
@@ -96,7 +99,7 @@ func (mv *MainMenuView) Draw(screen *ebiten.Image) {
 				"PlayerRadius":   float32(mv.demoLevel.Player.GetRadius()),
 				"Camera":         mv.demoLevel.Settings.CameraPosition,
 				"Distance":       float32(mv.demoLevel.Wave.Distance),
-				"DebugLines":     mv.demoLevel.Settings.DebugLines,
+				"DebugLines":     core.DebugLines(),
 
 				"BlockCount":     float32(len(mv.demoLevel.Blocks)),
 				"BlockPositions": mv.cache.BlockPositions,

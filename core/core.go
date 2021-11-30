@@ -120,7 +120,7 @@ func (c *Core) Update() {
 	// Update player on X axis
 	// TODO: below code is trash, but just making it work for now
 	if c.Player.intentX != 0 {
-		if c.Settings.PerfectStep {
+		if perfectStep {
 			c.Player.x += c.Player.intentX * 0.2
 			if c.Player.x <= 0 {
 				c.Player.x = 0.1

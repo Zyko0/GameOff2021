@@ -153,7 +153,7 @@ func colorize(p vec3, t, index, seed float) vec3 {
 		pal = PaletteBlock
 	} else if index == RoadIndex {
 		if DebugLines > 0. && mod(abs(p.x)-0.2, 0.4) < 0.02 {
-			return vec3(0.)
+			return vec3(1.)
 		}
 		p.z -= Distance
 		t = noise(p.xz*2., seed)

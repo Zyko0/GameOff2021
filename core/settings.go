@@ -3,11 +3,18 @@ package core
 import (
 	"github.com/Zyko0/GameOff2021/core/augments"
 	"github.com/Zyko0/GameOff2021/logic"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
 	MaxPlayerSpeed     = 0.02
 	MaxHeartContainers = 10
+)
+
+var (
+	perfectStep = false
+	debugLines  = float32(0)
 )
 
 type Action byte
@@ -35,8 +42,6 @@ type BlockSettings struct {
 type baseSettings struct {
 	HpToGameOver          int
 	HeartContainers       uint
-	PerfectStep           bool
-	DebugLines            float32
 	CameraPosition        []float32
 	Circular              bool
 	PlayerSpeed           float64
@@ -50,14 +55,12 @@ func newBaseSettings() *baseSettings {
 	return &baseSettings{
 		HpToGameOver:          0,
 		HeartContainers:       10,
-		PerfectStep:           false, // TODO: Remove
-		DebugLines:            0.,
 		CameraPosition:        []float32{0, -0.2, -1.15},
 		Circular:              false,
 		PlayerSpeed:           0.01,
 		PlayerSpeedModifier:   1.,
 		AugmentsTicksInterval: logic.TPS * 20,
-		EndWaveDistance:       150.,
+		EndWaveDistance:       125.,
 		BlockSettings: BlockSettings{
 			MinBlocksSpawn:        3,
 			MaxBlocksSpawn:        4,
@@ -119,4 +122,26 @@ func (s *Settings) ApplyAugments(currentAugments []*augments.Augment) {
 			s.CameraPosition = []float32{0, 0.15, -1.15}
 		}
 	}
+}
+
+func UpdateGlobalSettings() {
+	// Game settings update
+	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+		perfectStep = !perfectStep
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+		if debugLines == 0. {
+			debugLines = 1.
+		} else {
+			debugLines = 0.
+		}
+	}
+}
+
+func DebugLines() float32 {
+	return debugLines
+}
+
+func PerfectStep() bool {
+	return perfectStep
 }

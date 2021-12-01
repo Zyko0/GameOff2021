@@ -218,19 +218,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.augmentView.Draw(screen)
 		return
 	}
-	// Debug
-	// TODO: this debug took 17sec out of 120sec which is pretty huge
-	/*str := fmt.Sprintf("TPS %.2f - FPS %.2f - Wave %d - BlockCount %d - Score %d - Speed %.2f - HP %d - Distance %.2f",
-		ebiten.CurrentTPS(),
-		ebiten.CurrentFPS(),
-		g.core.Wave.Number,
-		len(g.core.Blocks),
-		g.core.GetScore(),
-		g.core.GetSpeed(),
-		g.core.PlayerHP,
-		g.core.Wave.Distance,
-	)
-	text.Draw(screen, str, assets.CardBodyDescriptionTextFontFace, 0, 20, color.RGBA{255, 255, 255, 255})*/
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

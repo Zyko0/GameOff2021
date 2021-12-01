@@ -52,7 +52,7 @@ var (
 	AugmentMoreBlocks = &Augment{
 		ID:          IDMoreBlocks,
 		Name:        "More blocks",
-		Description: "Hmmm, this game was designed with 3 blocks per spawn at maximum...",
+		Description: "This game was balanced around 3 blocks per spawn at maximum...",
 		Stackable:   false,
 	}
 	AugmentTallerBlocks = &Augment{
@@ -109,7 +109,7 @@ var (
 	AugmentNoRegularBlocks = &Augment{
 		ID:          IDNoRegularBlocks,
 		Name:        "No Regular Blocks",
-		Description: "The block you used to know doesn't exist anymore, we need a new default block now.",
+		Description: "The block you used to know doesn't exist anymore, we need a default block now.",
 		Stackable:   false,
 		Constraints: []ID{
 			IDHarderBlocks,
@@ -124,7 +124,7 @@ var (
 	AugmentFallenCamera = &Augment{
 		ID:          IDFallenCamera,
 		Name:        "Camera fall",
-		Description: "Someone dropped the camera on the floor, you might have to deal with it...",
+		Description: "Someone dropped the camera, you might have to deal with it...",
 		Stackable:   false,
 	}
 )

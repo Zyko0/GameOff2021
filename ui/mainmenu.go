@@ -57,7 +57,7 @@ func NewMainMenuView() *MainMenuView {
 	graphics.DrawRect(card, 0, 0, mainmenuCardWidth, mainmenuCardHeight, []float32{0.1, 0.1, 0.1, 0.9})
 	graphics.DrawRectBorder(card, 0, 0, mainmenuCardWidth, mainmenuCardHeight, 1, []float32{1, 1, 1, 0.9})
 	// Game title
-	titleStr := "GameOff 2021"
+	titleStr := "B.T.O.D"
 	titleStrBounds := text.BoundString(assets.CardTitleFontFace, titleStr)
 	text.Draw(
 		card,

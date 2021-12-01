@@ -74,7 +74,6 @@ func (pv *PauseView) Draw(screen *ebiten.Image) {
 		offsetX = float32(logic.ScreenWidth-logic.GameSquareDim) / 2
 	)
 
-	// Inform about pause, inform about resume by pressing 'P' again
 	geom := ebiten.GeoM{}
 	geom.Translate(
 		float64(offsetX+pauseCardOffsetX),

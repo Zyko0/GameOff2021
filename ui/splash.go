@@ -52,7 +52,7 @@ func (sv *SplashView) Update() {
 		sv.active = false
 		return
 	}
-	if len(inpututil.AppendPressedKeys(nil)) > 0 {
+	if len(inpututil.AppendPressedKeys(nil)) > 0 || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		sv.active = false
 	}
 

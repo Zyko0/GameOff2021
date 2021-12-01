@@ -70,13 +70,18 @@ func (h *HUD) Update(playerHP int, score uint64, wave int, multiplier uint64) {
 
 func (h *HUD) Draw(screen *ebiten.Image) {
 	// Health points
-	for i := 0; i < h.playerHP; i++ {
+	for i := 0; i < 10; i++ {
 		op := &ebiten.DrawImageOptions{
 			Filter: ebiten.FilterLinear,
 		}
 		op.GeoM.Scale(0.125, 0.125)
 		op.GeoM.Translate(hudOffsetX+float64(i*16), hudOffsetY)
-		op.ColorM.Scale(1, 0, 0, 1)
+		// Heart color
+		if i < h.playerHP {
+			op.ColorM.Scale(1, 0, 0, 1)
+		} else {
+			op.ColorM.Scale(0.15, 0.15, 0.15, 1)
+		}
 		screen.DrawImage(heartImg, op)
 	}
 	// Print wave number

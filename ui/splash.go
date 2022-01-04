@@ -29,14 +29,13 @@ func NewSplashView() *SplashView {
 		float64(logic.ScreenWidth)/float64(splashImg.Bounds().Max.X),
 		float64(logic.ScreenHeight)/float64(splashImg.Bounds().Max.Y),
 	)
-	colorm := ebiten.ColorM{}
 
 	return &SplashView{
 		ticks:  0,
 		active: true,
 
 		geom:   geom,
-		colorm: colorm,
+		colorm: ebiten.ColorM{},
 		image:  splashImg,
 	}
 }
